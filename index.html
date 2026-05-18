@@ -306,16 +306,25 @@ async function signPetition(){
   }
 
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
+      mode: 'cors',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name, id, province})
+      body: JSON.stringify({fullName: name, idNumber: id, province: province})
     });
 
-    document.getElementById('signForm').classList.add('hidden');
-    document.getElementById('thankYou').classList.remove('hidden');
-    setTimeout(loadSignatureCount, 2000);
+    const result = await response.json();
+
+    if (result.status === "duplicate") {
+      alert("This ID number has already signed the petition.");
+      return;
+    }
+    if (result.status === "success") {
+      alert("Thank you! Your signature has been recorded.");
+      document.getElementById('signForm').classList.add('hidden');
+      document.getElementById('thankYou').classList.remove('hidden');
+      setTimeout(loadSignatureCount, 2000);
+    }
 
   } catch (err) {
     alert('Submission failed. Please try again.');
