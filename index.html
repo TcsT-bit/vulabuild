@@ -244,4 +244,269 @@ const saProjects = [
   {id: 2,name: "Soweto Community Clinic",location: "Gauteng",budget: 7500000,status: "active"},
   {id: 3,name: "Durban Rural Road R102",location: "KwaZulu-Natal",budget: 15000000,status: "active"},
   {id: 4,name: "Kimberley Water Project",location: "Northern Cape",budget: 22000000,status: "pending"},
-  {id: 5,name: "Gqeberha Housing Units",location:
+  {id: 5,name: "Gqeberha Housing Units",location: "Eastern Cape",budget: 18000000,status: "done"}
+];
+
+const projectPhases = [
+  {id: 1,name: "Phase 1: Foundations",item: "Cement & Sand",budget: 0.12,suppliers: [{id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},{id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"}]},
+  {id: 2,name: "Phase 2: Structure",item: "Bricks & Steel",budget: 0.28,suppliers: [{id:1, name:"Burgersfort Bricks", price:"R4.20/brick", bbbee:"Level 1", rating:"4.5/5"},{id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"}]},
+  {id: 3,name: "Phase 3: Roofing",item: "Roofing & Trusses",budget: 0.19,suppliers: [{id:1, name:"RoofTech SA", price:"R125/sqm", bbbee:"Level 2", rating:"4.4/5"},{id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"}]},
+  {id: 4,name: "Phase 4: Finishing",item: "Plaster, Paint, Windows",budget: 0.22,suppliers: [{id:1, name:"FinishPro", price:"R45/sqm", bbbee:"Level 2", rating:"4.3/5"},{id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"}]},
+  {id: 5,name: "Phase 5: Electrical & Plumbing",item: "Wiring, Pipes, Fittings",budget: 0.19,suppliers: [{id:1, name:"ElectroBuild", price:"R85/point", bbbee:"Level 2", rating:"4.4/5"},{id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"}]}
+];
+
+let projectData = {};
+let selectedProjectId = null;
+let currentPhase = 0;
+let activityLog = [];
+let signatureCount = 0;
+
+saProjects.forEach(p => {
+  projectData[p.id] = {phases: {},spent: 0,jobs: 0,status: p.status};
+  projectPhases.forEach(ph => {
+    projectData[p.id].phases[ph.id] = {completed: false,winner: null,votes: {}};
+  });
+});
+
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(tab === 'projects') renderProjectList();
+  if(tab === 'dashboard') updateNationalDashboard();
+  if(tab === 'petition') loadSignatureCount();
+}
+
+// PETITION FUNCTIONS - SECURE + 100k target
+async function loadSignatureCount() {
+  try {
+    const response = await fetch(`${APPS_SCRIPT_URL}?action=count`);
+    const data = await response.json();
+    signatureCount = data.count || 0;
+    document.getElementById('sigCount').textContent = signatureCount.toLocaleString();
+  } catch (err) {
+    console.error('Failed to load count', err);
+    document.getElementById('sigCount').textContent = '0';
+  }
+}
+
+async function signPetition(){
+  const name = document.getElementById('sigName').value.trim();
+  const id = document.getElementById('sigID').value.trim();
+  const province = document.getElementById('sigProvince').value;
+
+  if(!name ||!id ||!province){
+    alert('Please fill all fields');
+    return;
+  }
+  if(id.length < 13){
+    alert('Please enter a valid 13-digit ID number');
+    return;
+  }
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, id, province})
+    });
+
+    document.getElementById('signForm').classList.add('hidden');
+    document.getElementById('thankYou').classList.remove('hidden');
+    setTimeout(loadSignatureCount, 2000);
+
+  } catch (err) {
+    alert('Submission failed. Please try again.');
+    console.error(err);
+  }
+}
+
+// PROJECT FUNCTIONS - unchanged
+function renderProjectList(){
+  const div = document.getElementById('projectList');
+  div.innerHTML = '';
+  saProjects.forEach(p => {
+    const data = projectData[p.id];
+    const percent = Math.round((data.spent/p.budget)*100);
+    const statusClass = p.status === 'done'? 'done' : p.status === 'pending'? 'pending' : '';
+    div.innerHTML += `
+      <div class="project-card" onclick="selectProject(${p.id})">
+        <h4>${p.name} <span class="badge ${statusClass}">${p.status.toUpperCase()}</span></h4>
+        <small>${p.location} | Budget: R${p.budget.toLocaleString()}</small>
+        <div class="progress" style="margin-top:8px">
+          <div class="progress-bar" style="width:${percent}%"></div>
+        </div>
+        <small>${percent}% Complete | Jobs: ${data.jobs}</small>
+      </div>
+    `;
+  });
+}
+
+function selectProject(id){
+  selectedProjectId = id;
+  const project = saProjects.find(p => p.id === id);
+  document.getElementById('selectedProjectName').innerText = project.name;
+  document.getElementById('selectedProjectDetails').classList.remove('hidden');
+  document.getElementById('uploadProject').innerText = project.name;
+  document.getElementById('projLocation').innerText = project.location;
+  document.getElementById('projBudget').innerText = `R${project.budget.toLocaleString()}`;
+  renderProjectPhases();
+  updateProjectDashboard();
+  showTab('leader');
+}
+
+function renderProjectPhases(){
+  const div = document.getElementById('phases');
+  div.innerHTML = '<h4>Phases for ' + saProjects.find(p=>p.id===selectedProjectId).name + '</h4>';
+  projectPhases.forEach(p => {
+    const phaseState = projectData[selectedProjectId].phases[p.id];
+    const status = phaseState.completed? 'done' : (currentPhase === p.id? 'active' : '');
+    const badge = phaseState.completed? '<span class="badge done">Done</span>' : (currentPhase === p.id? '<span class="badge">Active</span>' : '');
+    div.innerHTML += `
+      <div class="phase-select ${status}" onclick="selectPhase(${p.id})">
+        <div>
+          <strong>${p.name}</strong><br>
+          <small>${p.item} - Budget: R${Math.round(saProjects.find(pr=>pr.id===selectedProjectId).budget*p.budget).toLocaleString()}</small>
+        </div>
+        ${badge}
+      </div>
+    `;
+  });
+}
+
+function selectPhase(id){
+  if(!selectedProjectId) return alert('Select a project first');
+  if(projectData[selectedProjectId].phases[id].completed) return;
+  currentPhase = id;
+  const phase = projectPhases.find(p => p.id === id);
+  document.getElementById('votingCard').classList.remove('hidden');
+  document.getElementById('phaseTitle').innerText = phase.name;
+  document.getElementById('uploadPhase').innerText = phase.name.split(': ')[1];
+  renderSuppliers(phase.suppliers);
+  resetVoting();
+}
+
+function renderSuppliers(suppliers) {
+  const div = document.getElementById('suppliers');
+  div.innerHTML = '';
+  suppliers.forEach(s => {
+    div.innerHTML += `
+      <div class="supplier" onclick="selectSupplier(${s.id})" id="sup${s.id}">
+        <strong>${s.name}</strong><br>
+        <small>Price: ${s.price} | B-BBEE: ${s.bbbee} | Rating: ${s.rating}</small>
+      </div>
+    `;
+  });
+}
+
+let selectedSupplierId = null;
+function selectSupplier(id) {
+  selectedSupplierId = id;
+  document.querySelectorAll('.supplier').forEach(el => el.classList.remove('selected'));
+  document.getElementById('sup'+id).classList.add('selected');
+  document.getElementById('voteBtn').disabled = false;
+}
+
+function resetVoting(){
+  selectedSupplierId = null;
+  document.getElementById('voteBtn').disabled = true;
+  document.getElementById('voteCount').innerText = '0';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('resultCard').classList.add('hidden');
+}
+
+function submitVote() {
+  if(!selectedSupplierId) return;
+  const phase = projectData[selectedProjectId].phases[currentPhase];
+  phase.votes = {};
+  for(let i=0;i<20;i++){
+    phase.votes[i] = Math.floor(Math.random()*projectPhases[currentPhase-1].suppliers.length)+1;
+  }
+  let winnerId = 1;
+  const winner = projectPhases[currentPhase-1].suppliers[winnerId-1];
+  phase.winner = winner;
+  phase.completed = true;
+
+  const phaseBudget = saProjects.find(p=>p.id===selectedProjectId).budget * projectPhases[currentPhase-1].budget;
+  projectData[selectedProjectId].spent += phaseBudget;
+  projectData[selectedProjectId].jobs += 20;
+
+  activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name} awarded to ${winner.name}`);
+  document.getElementById('voteCount').innerText = '20';
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('winnerName').innerText = winner.name;
+  document.getElementById('winnerVotes').innerText = '12';
+  document.getElementById('winnerPrice').innerText = winner.price;
+  document.getElementById('resultCard').classList.remove('hidden');
+  document.getElementById('voteBtn').disabled = true;
+  updateProjectDashboard();
+  updateNationalDashboard();
+  renderProjectPhases();
+}
+
+function startNextPhase(){
+  if(currentPhase < 5) selectPhase(currentPhase + 1);
+  document.getElementById('resultCard').classList.add('hidden');
+}
+
+function updateProjectDashboard(){
+  const data = projectData[selectedProjectId];
+  const project = saProjects.find(p=>p.id===selectedProjectId);
+  const percent = Math.round((data.spent/project.budget)*100);
+  document.getElementById('projSpent').innerText = `R${Math.round(data.spent).toLocaleString()}`;
+  document.getElementById('projJobs').innerText = data.jobs;
+  document.getElementById('projProgress').style.width = percent + '%';
+  document.getElementById('projProgressText').innerText = percent + '% Complete';
+  const div = document.getElementById('phaseBreakdown');
+  div.innerHTML = '';
+  projectPhases.forEach(p => {
+    const state = data.phases[p.id];
+    const status = state.completed? '✓ Complete' : 'Pending';
+    const winner = state.winner? ` - ${state.winner.name}` : '';
+    div.innerHTML += `<div class="metric"><span>${p.name}</span><strong>${status}${winner}</strong></div>`;
+  });
+}
+
+function updateNationalDashboard(){
+  let totalBudget = 0, totalSpent = 0, totalJobs = 0, activeProjects = 0;
+  saProjects.forEach(p => {
+    totalBudget += p.budget;
+    totalSpent += projectData[p.id].spent;
+    totalJobs += projectData[p.id].jobs;
+    if(projectData[p.id].spent > 0) activeProjects++;
+  });
+  document.getElementById('totalProjects').innerText = activeProjects;
+  document.getElementById('totalBudget').innerText = `R${totalBudget.toLocaleString()}`;
+  document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
+  document.getElementById('totalJobs').innerText = totalJobs;
+  document.getElementById('activityLog').innerHTML = activityLog.slice(0,10).map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
+}
+
+function showPreview(input){
+  if(input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('preview').src = e.target.result;
+      document.getElementById('preview').style.display = 'block';
+      document.getElementById('submitBtn').disabled = false;
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function submitWork(){
+  document.getElementById('statusBox').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('status2').classList.remove('hidden'),1500);
+  setTimeout(()=>document.getElementById('status3').classList.remove('hidden'),3000);
+  activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name.split(': ')[1]} submitted for payment`);
+  updateProjectDashboard();
+}
+
+renderProjectList();
+updateNationalDashboard();
+loadSignatureCount();
+</script>
+</body>
+</html>
