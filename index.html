@@ -14,6 +14,8 @@ nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cur
 nav button.active{background:var(--green);color:#fff}
 .container{padding:16px;max-width:800px;margin:auto}
 .card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+footer{padding:16px;text-align:center;font-size:12px;color:#666}
+.disclaimer{background:#f8f9fa;border-left:4px solid var(--green);padding:10px;margin-top:12px;font-size:12px}
 .project-card{border:2px solid #ddd;border-radius:10px;padding:14px;margin:10px 0;cursor:pointer}
 .project-card.active{border-color:var(--green);background:#e8f5ee}
 .project-card h4{margin:0 0 6px 0}
@@ -24,8 +26,6 @@ nav button.active{background:var(--green);color:#fff}
 .supplier.selected{border:2px solid var(--green);background:#e8f5ee}
 .btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
 .btn:disabled{background:#ccc}
-.btn-secondary{background:#eee;color:#222}
-.btn-danger{background:var(--red)}
 .progress{background:#ddd;border-radius:8px;height:12px;overflow:hidden}
 .progress-bar{background:var(--green);height:100%;width:0%;transition:width.5s}
 .hidden{display:none}
@@ -37,12 +37,9 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 .status{padding:8px;border-radius:6px;margin-top:8px;font-weight:bold}
 .status.pending{background:#fff3cd;color:#856404}
 .status.approved{background:#d4edda;color:#155724}
-.status.paid{background:#cce5ff;color:#004085}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .stat-card{background:#f8f9fa;padding:12px;border-radius:8px;text-align:center}
 .stat-card h3{margin:0;font-size:24px;color:var(--green)}
-.signature-list{max-height:200px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:8px;margin-top:10px}
-.signature-item{padding:6px;border-bottom:1px solid #f5f5f5;font-size:14px}
 .counter{font-size:32px;font-weight:bold;color:var(--green);text-align:center}
 .target{color:#666;text-align:center;margin-bottom:16px}
 </style>
@@ -94,7 +91,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 <div id="projects" class="tab hidden">
   <div class="card">
     <h3>Projects Across South Africa</h3>
-    <p>This is what National Treasury sees. Every project, every rand, in real time.</p>
+    <p>Data sourced from public records. Every project, every rand, in real time.</p>
     <div id="projectList"></div>
   </div>
 </div>
@@ -168,7 +165,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
   </div>
 </div>
 
-<!-- 5. PETITION TAB - NOW WORKING -->
+<!-- 5. PETITION TAB - SECURE -->
 <div id="petition" class="tab hidden">
   <div class="card">
     <h3>Adopt VulaBuild for Transparent Public Projects</h3>
@@ -189,7 +186,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
     We call on National Treasury, COGTA, SALGA to roll out VulaBuild nationwide by Jan 2027.</p>
 
     <div class="counter" id="sigCount">0</div>
-    <div class="target">Signatures / 1000 target</div>
+    <div class="target">Signatures / 100,000 target</div>
 
     <div id="signForm">
       <h4>Sign the Petition</h4>
@@ -221,16 +218,27 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <div class="status approved">✓ Thank you for signing! Share this with your community.</div>
     </div>
 
-    <button class="btn btn-secondary" onclick="exportSignatures()">Download Signatures CSV</button>
-    <button class="btn btn-danger hidden" id="resetBtn" onclick="resetSignatures()">Reset - Admin Only</button>
-
-    <div class="signature-list" id="sigList"></div>
+    <div class="signature-list" id="sigList">
+      <small>Signatures are private. Only the total is shown.</small>
+    </div>
   </div>
 </div>
 
 </div>
 
+<footer>
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> VulaBuild is an independent citizen platform. Not affiliated with National Treasury, COGTA, SALGA, or any government department.
+    All project data is sourced from public records. This petition is a community input tool and does not bind any government procurement process.
+  </div>
+  <p>© 2026 VulaBuild. Built for transparency.</p>
+</footer>
+
 <script>
+// CONFIG - replace with your Apps Script Web App URL
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+const TARGET_SIGNATURES = 100000;
+
 const saProjects = [
   {id: 1,name: "Praktiseer Primary School",location: "Limpopo",budget: 10000000,status: "active"},
   {id: 2,name: "Soweto Community Clinic",location: "Gauteng",budget: 7500000,status: "active"},
@@ -251,7 +259,7 @@ let projectData = {};
 let selectedProjectId = null;
 let currentPhase = 0;
 let activityLog = [];
-let signatures = JSON.parse(localStorage.getItem('vulabuild_signatures') || '[]');
+let signatureCount = 0;
 
 saProjects.forEach(p => {
   projectData[p.id] = {phases: {},spent: 0,jobs: 0,status: p.status};
@@ -267,11 +275,23 @@ function showTab(tab){
   event.target.classList.add('active');
   if(tab === 'projects') renderProjectList();
   if(tab === 'dashboard') updateNationalDashboard();
-  if(tab === 'petition') renderSignatures();
+  if(tab === 'petition') loadSignatureCount();
 }
 
-// PETITION FUNCTIONS
-function signPetition(){
+// PETITION FUNCTIONS - SECURE + 100k target
+async function loadSignatureCount() {
+  try {
+    const response = await fetch(`${APPS_SCRIPT_URL}?action=count`);
+    const data = await response.json();
+    signatureCount = data.count || 0;
+    document.getElementById('sigCount').textContent = signatureCount.toLocaleString();
+  } catch (err) {
+    console.error('Failed to load count', err);
+    document.getElementById('sigCount').textContent = '0';
+  }
+}
+
+async function signPetition(){
   const name = document.getElementById('sigName').value.trim();
   const id = document.getElementById('sigID').value.trim();
   const province = document.getElementById('sigProvince').value;
@@ -284,67 +304,26 @@ function signPetition(){
     alert('Please enter a valid 13-digit ID number');
     return;
   }
-  if(signatures.find(s => s.id === id)){
-    alert('This ID has already signed');
-    return;
-  }
 
-  signatures.push({
-    name: name,
-    id: id,
-    province: province,
-    date: new Date().toLocaleDateString()
-  });
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, id, province})
+    });
 
-  localStorage.setItem('vulabuild_signatures', JSON.stringify(signatures));
-  document.getElementById('signForm').classList.add('hidden');
-  document.getElementById('thankYou').classList.remove('hidden');
-  renderSignatures();
-}
-
-function renderSignatures(){
-  document.getElementById('sigCount').innerText = signatures.length;
-  const list = document.getElementById('sigList');
-  list.innerHTML = signatures.slice(-20).reverse().map(s =>
-    `<div class="signature-item"><strong>${s.name}</strong> - ${s.province} - ${s.date}</div>`
-  ).join('') || '<small>No signatures yet. Be the first.</small>';
-
-  if(signatures.length > 0){
     document.getElementById('signForm').classList.add('hidden');
     document.getElementById('thankYou').classList.remove('hidden');
+    setTimeout(loadSignatureCount, 2000);
+
+  } catch (err) {
+    alert('Submission failed. Please try again.');
+    console.error(err);
   }
 }
 
-function exportSignatures(){
-  if(signatures.length === 0){
-    alert('No signatures yet');
-    return;
-  }
-  let csv = 'Name,ID Number,Province,Date\n';
-  signatures.forEach(s => {
-    csv += `"${s.name}","${s.id}","${s.province}","${s.date}"\n`;
-  });
-
-  const blob = new Blob([csv], {type: 'text/csv'});
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.setAttribute('hidden', '');
-  a.setAttribute('href', url);
-  a.setAttribute('download', 'vulabuild_petition_signatures.csv');
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-function resetSignatures(){
-  if(confirm('Delete all signatures? This cannot be undone.')){
-    signatures = [];
-    localStorage.removeItem('vulabuild_signatures');
-    renderSignatures();
-  }
-}
-
-// PROJECT FUNCTIONS - same as before
+// PROJECT FUNCTIONS - unchanged
 function renderProjectList(){
   const div = document.getElementById('projectList');
   div.innerHTML = '';
@@ -527,7 +506,7 @@ function submitWork(){
 
 renderProjectList();
 updateNationalDashboard();
-renderSignatures();
+loadSignatureCount();
 </script>
 </body>
 </html>
