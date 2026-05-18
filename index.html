@@ -12,11 +12,14 @@ header{background:var(--green);color:#fff;padding:14px;text-align:center}
 nav{display:flex;gap:8px;padding:10px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.05);overflow-x:auto}
 nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cursor:pointer;white-space:nowrap}
 nav button.active{background:var(--green);color:#fff}
-.container{padding:16px;max-width:700px;margin:auto}
+.container{padding:16px;max-width:800px;margin:auto}
 .card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
-.phase-select{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-.phase-select.active{border:2px solid var(--green);background:#e8f5ee}
-.phase-select.done{background:#d4edda;border-color:#28a745}
+.project-card{border:2px solid #ddd;border-radius:10px;padding:14px;margin:10px 0;cursor:pointer}
+.project-card.active{border-color:var(--green);background:#e8f5ee}
+.project-card h4{margin:0 0 6px 0}
+.badge{background:#1a5c38;color:#fff;padding:3px 8px;border-radius:12px;font-size:11px;margin-left:6px}
+.badge.pending{background:#f39c12}
+.badge.done{background:#28a745}
 .supplier{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer}
 .supplier.selected{border:2px solid var(--green);background:#e8f5ee}
 .btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
@@ -25,26 +28,29 @@ nav button.active{background:var(--green);color:#fff}
 .progress-bar{background:var(--green);height:100%;width:0%;transition:width.5s}
 .hidden{display:none}
 .metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
-h2,h3{margin:6px 0}
+h2,h3,h4{margin:6px 0}
 small{color:#666}
 .upload-box{border:2px dashed #ccc;border-radius:8px;padding:20px;text-align:center;margin:12px 0}
 .status{padding:8px;border-radius:6px;margin-top:8px;font-weight:bold}
 .status.pending{background:#fff3cd;color:#856404}
 .status.approved{background:#d4edda;color:#155724}
 .status.paid{background:#cce5ff;color:#004085}
-.badge{background:#1a5c38;color:#fff;padding:4px 8px;border-radius:12px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.stat-card{background:#f8f9fa;padding:12px;border-radius:8px;text-align:center}
+.stat-card h3{margin:0;font-size:24px;color:var(--green)}
 </style>
 </head>
 <body>
 <header>
   <h2>VulaBuild</h2>
-  <small>Open Tenders. Open Jobs. Open Future.</small>
+  <small>National Platform for Transparent Public Projects</small>
 </header>
 
 <nav>
   <button class="active" onclick="showTab('leader')">Leader App</button>
+  <button onclick="showTab('projects')">All Projects</button>
+  <button onclick="showTab('dashboard')">Dashboard</button>
   <button onclick="showTab('upload')">Upload & Get Paid</button>
-  <button onclick="showTab('dashboard')">Public Dashboard</button>
   <button onclick="showTab('petition')">Petition</button>
 </nav>
 
@@ -53,8 +59,9 @@ small{color:#666}
 <!-- 1. LEADER APP TAB -->
 <div id="leader" class="tab">
   <div class="card">
-    <h3>Select Phase</h3>
-    <div id="phases"></div>
+    <h3>Select Project & Phase</h3>
+    <div id="projectSelect"></div>
+    <div id="phases" style="margin-top:16px"></div>
   </div>
 
   <div class="card hidden" id="votingCard">
@@ -76,11 +83,65 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 2. UPLOAD & GET PAID TAB -->
+<!-- 2. ALL PROJECTS TAB -->
+<div id="projects" class="tab hidden">
+  <div class="card">
+    <h3>Projects Across South Africa</h3>
+    <p>This is what National Treasury sees. Every project, every rand, in real time.</p>
+    <div id="projectList"></div>
+  </div>
+</div>
+
+<!-- 3. DASHBOARD TAB -->
+<div id="dashboard" class="tab hidden">
+  <div class="grid">
+    <div class="stat-card">
+      <h3 id="totalProjects">0</h3>
+      <small>Active Projects</small>
+    </div>
+    <div class="stat-card">
+      <h3 id="totalBudget">R0</h3>
+      <small>Total Budget</small>
+    </div>
+    <div class="stat-card">
+      <h3 id="totalSpent">R0</h3>
+      <small>Total Spent</small>
+    </div>
+    <div class="stat-card">
+      <h3 id="totalJobs">0</h3>
+      <small>Jobs Created</small>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 id="selectedProjectName">Select a Project</h3>
+    <div id="selectedProjectDetails" class="hidden">
+      <div class="metric"><span>Location</span><strong id="projLocation">-</strong></div>
+      <div class="metric"><span>Budget</span><strong id="projBudget">-</strong></div>
+      <div class="metric"><span>Spent</span><strong id="projSpent">-</strong></div>
+      <div class="metric"><span>Jobs</span><strong id="projJobs">-</strong></div>
+      <div style="margin-top:12px">
+        <div class="progress"><div class="progress-bar" id="projProgress" style="width:0%"></div></div>
+        <small id="projProgressText">0% Complete</small>
+      </div>
+      <h4 style="margin-top:16px">Phase Breakdown</h4>
+      <div id="phaseBreakdown"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Activity - National Feed</h3>
+    <div id="activityLog">
+      <p>Select a project to see activity</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4. UPLOAD & GET PAID TAB -->
 <div id="upload" class="tab hidden">
   <div class="card">
     <h3>Submit Work for Payment</h3>
-    <p>Section 7 - <span id="uploadPhase">Foundations</span> Complete</p>
+    <p><span id="uploadProject">-</span> - <span id="uploadPhase">-</span></p>
 
     <div class="upload-box">
       <p>📷 Tap to add photo of completed work</p>
@@ -88,44 +149,19 @@ small{color:#666}
       <img id="preview" style="max-width:100%;margin-top:10px;display:none;border-radius:8px">
     </div>
 
-    <div id="gps">📍 Location: 24.9°S, 30.3°E - Praktiseer</div>
+    <div id="gps">📍 GPS auto-captured</div>
 
     <button class="btn" id="submitBtn" onclick="submitWork()" disabled>Submit for Inspection</button>
 
     <div id="statusBox" class="hidden">
       <div class="status pending" id="status1">1. Submitted - Awaiting Inspector</div>
       <div class="status hidden" id="status2">2. Inspector Approved ✓</div>
-      <div class="status hidden" id="status3">3. Payment Released: <span id="paidAmount">R85,000</span> ✓</div>
+      <div class="status hidden" id="status3">3. Payment Released ✓</div>
     </div>
   </div>
 </div>
 
-<!-- 3. PUBLIC DASHBOARD TAB -->
-<div id="dashboard" class="tab hidden">
-  <div class="card">
-    <h3>Limpopo - Praktiseer School Project</h3>
-    <div class="metric"><span>Total Budget</span><strong>R10,000,000</strong></div>
-    <div class="metric"><span>Spent</span><strong id="totalSpent">R0</strong></div>
-    <div class="metric"><span>Jobs Created</span><strong id="jobsCreated">0</strong></div>
-    <div class="metric"><span>Phases Complete</span><strong id="phasesComplete">0/5</strong></div>
-    <div style="margin-top:12px">
-      <div class="progress"><div class="progress-bar" id="projectProgress" style="width:0%"></div></div>
-      <small id="projectProgressText">0% Complete</small>
-    </div>
-  </div>
-  <div class="card">
-    <h3>Phase Breakdown</h3>
-    <div id="phaseBreakdown"></div>
-  </div>
-  <div class="card">
-    <h3>Recent Activity</h3>
-    <div id="activityLog">
-      <p>Project started. Awaiting first vote.</p>
-    </div>
-  </div>
-</div>
-
-<!-- 4. PETITION TAB -->
+<!-- 5. PETITION TAB -->
 <div id="petition" class="tab hidden">
   <div class="card">
     <h3>Adopt VulaBuild for Transparent Public Projects</h3>
@@ -133,7 +169,7 @@ small{color:#666}
     SA loses R300B+ yearly to tender corruption. Projects stall, youth stay jobless.</p>
 
     <p><strong>The Solution</strong><br>
-    VulaBuild splits contracts into community-managed projects. Leaders vote on suppliers, payments only release on verified work, everything is logged publicly.</p>
+    VulaBuild tracks ALL public projects in one platform. From Limpopo schools to KZN roads.</p>
 
     <p><strong>Why It Works</strong><br>
     - Kills corruption with transparent logs<br>
@@ -142,7 +178,7 @@ small{color:#666}
     - Works offline with USSD/SMS backup</p>
 
     <p><strong>Our Demand</strong><br>
-    We call on National Treasury, COGTA, SALGA to pilot VulaBuild in 3 municipalities by Jan 2027.</p>
+    We call on National Treasury, COGTA, SALGA to roll out VulaBuild nationwide by Jan 2027.</p>
 
     <button class="btn" onclick="alert('Create this on Change.org and paste the link here')">Sign the Petition</button>
   </div>
@@ -151,78 +187,116 @@ small{color:#666}
 </div>
 
 <script>
+const saProjects = [
+  {
+    id: 1,
+    name: "Praktiseer Primary School",
+    location: "Limpopo",
+    budget: 10000000,
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "Soweto Community Clinic",
+    location: "Gauteng",
+    budget: 7500000,
+    status: "active"
+  },
+  {
+    id: 3,
+    name: "Durban Rural Road R102",
+    location: "KwaZulu-Natal",
+    budget: 15000000,
+    status: "active"
+  },
+  {
+    id: 4,
+    name: "Kimberley Water Project",
+    location: "Northern Cape",
+    budget: 22000000,
+    status: "pending"
+  },
+  {
+    id: 5,
+    name: "Gqeberha Housing Units",
+    location: "Eastern Cape",
+    budget: 18000000,
+    status: "done"
+  }
+];
+
 const projectPhases = [
   {
     id: 1,
     name: "Phase 1: Foundations",
     item: "Cement & Sand",
-    budget: 1200000,
+    budget: 0.12,
     suppliers: [
       {id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},
-      {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"},
-      {id:3, name:"SA Cement Group", price:"R88/bag", bbbee:"Level 3", rating:"4.1/5"},
-      {id:4, name:"Local Mix Ltd", price:"R90/bag", bbbee:"Level 4", rating:"4.5/5"}
+      {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"}
     ]
   },
   {
     id: 2,
     name: "Phase 2: Structure",
     item: "Bricks & Steel",
-    budget: 2800000,
+    budget: 0.28,
     suppliers: [
       {id:1, name:"Burgersfort Bricks", price:"R4.20/brick", bbbee:"Level 1", rating:"4.5/5"},
-      {id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"},
-      {id:3, name:"Local Masonry", price:"R4.35/brick", bbbee:"Level 4", rating:"4.7/5"}
+      {id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"}
     ]
   },
   {
     id: 3,
     name: "Phase 3: Roofing",
     item: "Roofing & Trusses",
-    budget: 1900000,
+    budget: 0.19,
     suppliers: [
       {id:1, name:"RoofTech SA", price:"R125/sqm", bbbee:"Level 2", rating:"4.4/5"},
-      {id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"},
-      {id:3, name:"Limpopo Roofing", price:"R130/sqm", bbbee:"Level 1", rating:"4.6/5"}
+      {id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"}
     ]
   },
   {
     id: 4,
     name: "Phase 4: Finishing",
     item: "Plaster, Paint, Windows",
-    budget: 2200000,
+    budget: 0.22,
     suppliers: [
       {id:1, name:"FinishPro", price:"R45/sqm", bbbee:"Level 2", rating:"4.3/5"},
-      {id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"},
-      {id:3, name:"BuildMate", price:"R48/sqm", bbbee:"Level 3", rating:"4.2/5"}
+      {id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"}
     ]
   },
   {
     id: 5,
     name: "Phase 5: Electrical & Plumbing",
     item: "Wiring, Pipes, Fittings",
-    budget: 1900000,
+    budget: 0.19,
     suppliers: [
       {id:1, name:"ElectroBuild", price:"R85/point", bbbee:"Level 2", rating:"4.4/5"},
-      {id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"},
-      {id:3, name:"TechFix", price:"R82/point", bbbee:"Level 3", rating:"4.2/5"}
+      {id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"}
     ]
   }
 ];
 
+let projectData = {};
+let selectedProjectId = null;
 let currentPhase = 0;
-let phaseData = {};
-let totalSpent = 0;
-let jobsCreated = 0;
 let activityLog = [];
 
-projectPhases.forEach(p => {
-  phaseData[p.id] = {
-    completed: false,
-    winner: null,
-    votes: {},
-    totalVotes: 0
+saProjects.forEach(p => {
+  projectData[p.id] = {
+    phases: {},
+    spent: 0,
+    jobs: 0,
+    status: p.status
   };
+  projectPhases.forEach(ph => {
+    projectData[p.id].phases[ph.id] = {
+      completed: false,
+      winner: null,
+      votes: {}
+    };
+  });
 });
 
 function showTab(tab){
@@ -230,19 +304,58 @@ function showTab(tab){
   document.getElementById(tab).classList.remove('hidden');
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
+
+  if(tab === 'projects') renderProjectList();
+  if(tab === 'dashboard') updateNationalDashboard();
 }
 
-function renderPhases(){
-  const div = document.getElementById('phases');
+function renderProjectList(){
+  const div = document.getElementById('projectList');
   div.innerHTML = '';
+  saProjects.forEach(p => {
+    const data = projectData[p.id];
+    const percent = Math.round((data.spent/p.budget)*100);
+    const statusClass = p.status === 'done'? 'done' : p.status === 'pending'? 'pending' : '';
+    div.innerHTML += `
+      <div class="project-card" onclick="selectProject(${p.id})">
+        <h4>${p.name} <span class="badge ${statusClass}">${p.status.toUpperCase()}</span></h4>
+        <small>${p.location} | Budget: R${p.budget.toLocaleString()}</small>
+        <div class="progress" style="margin-top:8px">
+          <div class="progress-bar" style="width:${percent}%"></div>
+        </div>
+        <small>${percent}% Complete | Jobs: ${data.jobs}</small>
+      </div>
+    `;
+  });
+}
+
+function selectProject(id){
+  selectedProjectId = id;
+  const project = saProjects.find(p => p.id === id);
+
+  document.getElementById('selectedProjectName').innerText = project.name;
+  document.getElementById('selectedProjectDetails').classList.remove('hidden');
+  document.getElementById('uploadProject').innerText = project.name;
+  document.getElementById('projLocation').innerText = project.location;
+  document.getElementById('projBudget').innerText = `R${project.budget.toLocaleString()}`;
+
+  renderProjectPhases();
+  updateProjectDashboard();
+  showTab('leader');
+}
+
+function renderProjectPhases(){
+  const div = document.getElementById('phases');
+  div.innerHTML = '<h4>Phases for ' + saProjects.find(p=>p.id===selectedProjectId).name + '</h4>';
   projectPhases.forEach(p => {
-    const status = phaseData[p.id].completed? 'done' : (currentPhase === p.id? 'active' : '');
-    const badge = phaseData[p.id].completed? '<span class="badge">Done</span>' : (currentPhase === p.id? '<span class="badge">Active</span>' : '');
+    const phaseState = projectData[selectedProjectId].phases[p.id];
+    const status = phaseState.completed? 'done' : (currentPhase === p.id? 'active' : '');
+    const badge = phaseState.completed? '<span class="badge done">Done</span>' : (currentPhase === p.id? '<span class="badge">Active</span>' : '');
     div.innerHTML += `
       <div class="phase-select ${status}" onclick="selectPhase(${p.id})">
         <div>
           <strong>${p.name}</strong><br>
-          <small>${p.item} - Budget: R${p.budget.toLocaleString()}</small>
+          <small>${p.item} - Budget: R${Math.round(saProjects.find(pr=>pr.id===selectedProjectId).budget*p.budget).toLocaleString()}</small>
         </div>
         ${badge}
       </div>
@@ -251,18 +364,17 @@ function renderPhases(){
 }
 
 function selectPhase(id){
-  if(phaseData[id].completed) return;
+  if(!selectedProjectId) return alert('Select a project first');
+  if(projectData[selectedProjectId].phases[id].completed) return;
   currentPhase = id;
   const phase = projectPhases.find(p => p.id === id);
 
   document.getElementById('votingCard').classList.remove('hidden');
   document.getElementById('phaseTitle').innerText = phase.name;
   document.getElementById('uploadPhase').innerText = phase.name.split(': ')[1];
-  document.getElementById('paidAmount').innerText = `R${Math.round(phase.budget/20).toLocaleString()}`;
 
   renderSuppliers(phase.suppliers);
   resetVoting();
-  renderPhases();
 }
 
 function renderSuppliers(suppliers) {
@@ -298,25 +410,24 @@ function resetVoting(){
 function submitVote() {
   if(!selectedSupplierId) return;
 
-  const phase = phaseData[currentPhase];
+  const phase = projectData[selectedProjectId].phases[currentPhase];
   phase.votes = {};
 
-  // Simulate 20 sections voting
   for(let i=0;i<20;i++){
     const rand = Math.floor(Math.random()*projectPhases[currentPhase-1].suppliers.length)+1;
-    phase.votes[rand] = (phase.votes[rand] || 0) + 1;
+    phase.votes[rand] = (phase.votes[rand]||0) + 1;
   }
-  phase.totalVotes = 20;
 
   let winnerId = Object.keys(phase.votes).reduce((a,b)=>phase.votes[a]>phase.votes[b]?a:b);
   const winner = projectPhases[currentPhase-1].suppliers.find(s=>s.id==winnerId);
   phase.winner = winner;
   phase.completed = true;
 
-  // Update stats
-  totalSpent += projectPhases[currentPhase-1].budget;
-  jobsCreated += 20; // 1 job per section
-  activityLog.unshift(`✓ ${projectPhases[currentPhase-1].name} awarded to ${winner.name} for ${winner.price}`);
+  const phaseBudget = saProjects.find(p=>p.id===selectedProjectId).budget * projectPhases[currentPhase-1].budget;
+  projectData[selectedProjectId].spent += phaseBudget;
+  projectData[selectedProjectId].jobs += 20;
+
+  activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name} awarded to ${winner.name}`);
 
   document.getElementById('voteCount').innerText = '20';
   document.getElementById('progressBar').style.width = '100%';
@@ -326,8 +437,9 @@ function submitVote() {
   document.getElementById('resultCard').classList.remove('hidden');
   document.getElementById('voteBtn').disabled = true;
 
-  updateDashboard();
-  renderPhases();
+  updateProjectDashboard();
+  updateNationalDashboard();
+  renderProjectPhases();
 }
 
 function startNextPhase(){
@@ -337,27 +449,42 @@ function startNextPhase(){
   document.getElementById('resultCard').classList.add('hidden');
 }
 
-function updateDashboard(){
-  document.getElementById('totalSpent').innerText = `R${totalSpent.toLocaleString()}`;
-  document.getElementById('jobsCreated').innerText = jobsCreated;
-  document.getElementById('phasesComplete').innerText = `${Object.values(phaseData).filter(p=>p.completed).length}/5`;
+function updateProjectDashboard(){
+  const data = projectData[selectedProjectId];
+  const project = saProjects.find(p=>p.id===selectedProjectId);
+  const percent = Math.round((data.spent/project.budget)*100);
 
-  const percent = Math.round((totalSpent/10000000)*100);
-  document.getElementById('projectProgress').style.width = percent + '%';
-  document.getElementById('projectProgressText').innerText = percent + '% Complete';
+  document.getElementById('projSpent').innerText = `R${Math.round(data.spent).toLocaleString()}`;
+  document.getElementById('projJobs').innerText = data.jobs;
+  document.getElementById('projProgress').style.width = percent + '%';
+  document.getElementById('projProgressText').innerText = percent + '% Complete';
 
-  // Update phase breakdown
   const div = document.getElementById('phaseBreakdown');
   div.innerHTML = '';
   projectPhases.forEach(p => {
-    const status = phaseData[p.id].completed? '✓ Complete' : 'Pending';
-    const winner = phaseData[p.id].winner? ` - ${phaseData[p.id].winner.name}` : '';
+    const state = data.phases[p.id];
+    const status = state.completed? '✓ Complete' : 'Pending';
+    const winner = state.winner? ` - ${state.winner.name}` : '';
     div.innerHTML += `<div class="metric"><span>${p.name}</span><strong>${status}${winner}</strong></div>`;
   });
+}
 
-  // Update activity log
-  const logDiv = document.getElementById('activityLog');
-  logDiv.innerHTML = activityLog.map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
+function updateNationalDashboard(){
+  let totalBudget = 0, totalSpent = 0, totalJobs = 0, activeProjects = 0;
+
+  saProjects.forEach(p => {
+    totalBudget += p.budget;
+    totalSpent += projectData[p.id].spent;
+    totalJobs += projectData[p.id].jobs;
+    if(projectData[p.id].spent > 0) activeProjects++;
+  });
+
+  document.getElementById('totalProjects').innerText = activeProjects;
+  document.getElementById('totalBudget').innerText = `R${totalBudget.toLocaleString()}`;
+  document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
+  document.getElementById('totalJobs').innerText = totalJobs;
+
+  document.getElementById('activityLog').innerHTML = activityLog.slice(0,10).map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
 }
 
 function showPreview(input){
@@ -377,12 +504,12 @@ function submitWork(){
   setTimeout(()=>document.getElementById('status2').classList.remove('hidden'),1500);
   setTimeout(()=>document.getElementById('status3').classList.remove('hidden'),3000);
 
-  activityLog.unshift(`✓ Section 7: ${projectPhases[currentPhase-1].name.split(': ')[1]} submitted for payment`);
-  updateDashboard();
+  activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name.split(': ')[1]} submitted for payment`);
+  updateProjectDashboard();
 }
 
-renderPhases();
-selectPhase(1);
+renderProjectList();
+updateNationalDashboard();
 </script>
 </body>
 </html>
