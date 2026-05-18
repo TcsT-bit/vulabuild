@@ -14,6 +14,9 @@ nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cur
 nav button.active{background:var(--green);color:#fff}
 .container{padding:16px;max-width:700px;margin:auto}
 .card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.phase-select{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.phase-select.active{border:2px solid var(--green);background:#e8f5ee}
+.phase-select.done{background:#d4edda;border-color:#28a745}
 .supplier{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer}
 .supplier.selected{border:2px solid var(--green);background:#e8f5ee}
 .btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
@@ -29,6 +32,7 @@ small{color:#666}
 .status.pending{background:#fff3cd;color:#856404}
 .status.approved{background:#d4edda;color:#155724}
 .status.paid{background:#cce5ff;color:#004085}
+.badge{background:#1a5c38;color:#fff;padding:4px 8px;border-radius:12px;font-size:12px}
 </style>
 </head>
 <body>
@@ -49,8 +53,13 @@ small{color:#666}
 <!-- 1. LEADER APP TAB -->
 <div id="leader" class="tab">
   <div class="card">
-    <h3>Phase 1: Foundations</h3>
-    <p>Choose cement supplier. Your vote is private.</p>
+    <h3>Select Phase</h3>
+    <div id="phases"></div>
+  </div>
+
+  <div class="card hidden" id="votingCard">
+    <h3 id="phaseTitle">Phase 1: Foundations</h3>
+    <p>Choose supplier. Your vote is private.</p>
     <div id="suppliers"></div>
     <button class="btn" id="voteBtn" onclick="submitVote()" disabled>Submit Vote</button>
     <div style="margin-top:16px">
@@ -62,7 +71,8 @@ small{color:#666}
   <div class="card hidden" id="resultCard">
     <h3>Consensus Reached!</h3>
     <p><strong id="winnerName"></strong> won with <span id="winnerVotes"></span> votes.</p>
-    <p>Price locked at <strong id="winnerPrice"></strong>. Work can start.</p>
+    <p>Price locked at <strong id="winnerPrice"></strong>. Work starts now.</p>
+    <button class="btn" onclick="startNextPhase()">Start Next Phase</button>
   </div>
 </div>
 
@@ -70,7 +80,7 @@ small{color:#666}
 <div id="upload" class="tab hidden">
   <div class="card">
     <h3>Submit Work for Payment</h3>
-    <p>Section 7 - Foundations Complete</p>
+    <p>Section 7 - <span id="uploadPhase">Foundations</span> Complete</p>
 
     <div class="upload-box">
       <p>📷 Tap to add photo of completed work</p>
@@ -85,7 +95,7 @@ small{color:#666}
     <div id="statusBox" class="hidden">
       <div class="status pending" id="status1">1. Submitted - Awaiting Inspector</div>
       <div class="status hidden" id="status2">2. Inspector Approved ✓</div>
-      <div class="status hidden" id="status3">3. Payment Released: R85,000 ✓</div>
+      <div class="status hidden" id="status3">3. Payment Released: <span id="paidAmount">R85,000</span> ✓</div>
     </div>
   </div>
 </div>
@@ -95,20 +105,23 @@ small{color:#666}
   <div class="card">
     <h3>Limpopo - Praktiseer School Project</h3>
     <div class="metric"><span>Total Budget</span><strong>R10,000,000</strong></div>
-    <div class="metric"><span>Spent</span><strong>R2,425,000</strong></div>
-    <div class="metric"><span>Jobs Created</span><strong>342</strong></div>
-    <div class="metric"><span>Projects Stalled</span><strong>0</strong></div>
-    <div class="metric"><span>Sections Active</span><strong>20/20</strong></div>
+    <div class="metric"><span>Spent</span><strong id="totalSpent">R0</strong></div>
+    <div class="metric"><span>Jobs Created</span><strong id="jobsCreated">0</strong></div>
+    <div class="metric"><span>Phases Complete</span><strong id="phasesComplete">0/5</strong></div>
     <div style="margin-top:12px">
-      <div class="progress"><div class="progress-bar" style="width:48%"></div></div>
-      <small>48% Complete</small>
+      <div class="progress"><div class="progress-bar" id="projectProgress" style="width:0%"></div></div>
+      <small id="projectProgressText">0% Complete</small>
     </div>
   </div>
   <div class="card">
+    <h3>Phase Breakdown</h3>
+    <div id="phaseBreakdown"></div>
+  </div>
+  <div class="card">
     <h3>Recent Activity</h3>
-    <p>✓ Section 7: Foundations approved & paid<br>
-    ✓ Section 12: Bricks delivered<br>
-    ✓ Insurance claim approved for broken mixer</p>
+    <div id="activityLog">
+      <p>Project started. Awaiting first vote.</p>
+    </div>
   </div>
 </div>
 
@@ -138,16 +151,79 @@ small{color:#666}
 </div>
 
 <script>
-const suppliers = [
-  {id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},
-  {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"},
-  {id:3, name:"SA Cement Group", price:"R88/bag", bbbee:"Level 3", rating:"4.1/5"},
-  {id:4, name:"Local Mix Ltd", price:"R90/bag", bbbee:"Level 4", rating:"4.5/5"}
+const projectPhases = [
+  {
+    id: 1,
+    name: "Phase 1: Foundations",
+    item: "Cement & Sand",
+    budget: 1200000,
+    suppliers: [
+      {id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},
+      {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"},
+      {id:3, name:"SA Cement Group", price:"R88/bag", bbbee:"Level 3", rating:"4.1/5"},
+      {id:4, name:"Local Mix Ltd", price:"R90/bag", bbbee:"Level 4", rating:"4.5/5"}
+    ]
+  },
+  {
+    id: 2,
+    name: "Phase 2: Structure",
+    item: "Bricks & Steel",
+    budget: 2800000,
+    suppliers: [
+      {id:1, name:"Burgersfort Bricks", price:"R4.20/brick", bbbee:"Level 1", rating:"4.5/5"},
+      {id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"},
+      {id:3, name:"Local Masonry", price:"R4.35/brick", bbbee:"Level 4", rating:"4.7/5"}
+    ]
+  },
+  {
+    id: 3,
+    name: "Phase 3: Roofing",
+    item: "Roofing & Trusses",
+    budget: 1900000,
+    suppliers: [
+      {id:1, name:"RoofTech SA", price:"R125/sqm", bbbee:"Level 2", rating:"4.4/5"},
+      {id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"},
+      {id:3, name:"Limpopo Roofing", price:"R130/sqm", bbbee:"Level 1", rating:"4.6/5"}
+    ]
+  },
+  {
+    id: 4,
+    name: "Phase 4: Finishing",
+    item: "Plaster, Paint, Windows",
+    budget: 2200000,
+    suppliers: [
+      {id:1, name:"FinishPro", price:"R45/sqm", bbbee:"Level 2", rating:"4.3/5"},
+      {id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"},
+      {id:3, name:"BuildMate", price:"R48/sqm", bbbee:"Level 3", rating:"4.2/5"}
+    ]
+  },
+  {
+    id: 5,
+    name: "Phase 5: Electrical & Plumbing",
+    item: "Wiring, Pipes, Fittings",
+    budget: 1900000,
+    suppliers: [
+      {id:1, name:"ElectroBuild", price:"R85/point", bbbee:"Level 2", rating:"4.4/5"},
+      {id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"},
+      {id:3, name:"TechFix", price:"R82/point", bbbee:"Level 3", rating:"4.2/5"}
+    ]
+  }
 ];
 
-let selectedId = null;
-let votes = {1:0,2:0,3:0,4:0};
-let totalVotes = 0;
+let currentPhase = 0;
+let phaseData = {};
+let totalSpent = 0;
+let jobsCreated = 0;
+let activityLog = [];
+
+projectPhases.forEach(p => {
+  phaseData[p.id] = {
+    completed: false,
+    winner: null,
+    votes: {},
+    totalVotes: 0
+  };
+});
 
 function showTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
@@ -156,7 +232,40 @@ function showTab(tab){
   event.target.classList.add('active');
 }
 
-function renderSuppliers() {
+function renderPhases(){
+  const div = document.getElementById('phases');
+  div.innerHTML = '';
+  projectPhases.forEach(p => {
+    const status = phaseData[p.id].completed? 'done' : (currentPhase === p.id? 'active' : '');
+    const badge = phaseData[p.id].completed? '<span class="badge">Done</span>' : (currentPhase === p.id? '<span class="badge">Active</span>' : '');
+    div.innerHTML += `
+      <div class="phase-select ${status}" onclick="selectPhase(${p.id})">
+        <div>
+          <strong>${p.name}</strong><br>
+          <small>${p.item} - Budget: R${p.budget.toLocaleString()}</small>
+        </div>
+        ${badge}
+      </div>
+    `;
+  });
+}
+
+function selectPhase(id){
+  if(phaseData[id].completed) return;
+  currentPhase = id;
+  const phase = projectPhases.find(p => p.id === id);
+
+  document.getElementById('votingCard').classList.remove('hidden');
+  document.getElementById('phaseTitle').innerText = phase.name;
+  document.getElementById('uploadPhase').innerText = phase.name.split(': ')[1];
+  document.getElementById('paidAmount').innerText = `R${Math.round(phase.budget/20).toLocaleString()}`;
+
+  renderSuppliers(phase.suppliers);
+  resetVoting();
+  renderPhases();
+}
+
+function renderSuppliers(suppliers) {
   const div = document.getElementById('suppliers');
   div.innerHTML = '';
   suppliers.forEach(s => {
@@ -169,31 +278,86 @@ function renderSuppliers() {
   });
 }
 
+let selectedSupplierId = null;
+
 function selectSupplier(id) {
-  selectedId = id;
+  selectedSupplierId = id;
   document.querySelectorAll('.supplier').forEach(el => el.classList.remove('selected'));
   document.getElementById('sup'+id).classList.add('selected');
   document.getElementById('voteBtn').disabled = false;
 }
 
+function resetVoting(){
+  selectedSupplierId = null;
+  document.getElementById('voteBtn').disabled = true;
+  document.getElementById('voteCount').innerText = '0';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('resultCard').classList.add('hidden');
+}
+
 function submitVote() {
-  if(!selectedId) return;
+  if(!selectedSupplierId) return;
+
+  const phase = phaseData[currentPhase];
+  phase.votes = {};
+
+  // Simulate 20 sections voting
   for(let i=0;i<20;i++){
-    let rand = Math.floor(Math.random()*4)+1;
-    votes++;
+    const rand = Math.floor(Math.random()*projectPhases[currentPhase-1].suppliers.length)+1;
+    phase.votes[rand] = (phase.votes[rand] || 0) + 1;
   }
-  totalVotes=20;
+  phase.totalVotes = 20;
 
-  let winnerId = Object.keys(votes).reduce((a,b)=>votes[a]>votes[b]?a:b);
-  let winner = suppliers.find(s=>s.id==winnerId);
+  let winnerId = Object.keys(phase.votes).reduce((a,b)=>phase.votes[a]>phase.votes[b]?a:b);
+  const winner = projectPhases[currentPhase-1].suppliers.find(s=>s.id==winnerId);
+  phase.winner = winner;
+  phase.completed = true;
 
-  document.getElementById('voteCount').innerText = totalVotes;
+  // Update stats
+  totalSpent += projectPhases[currentPhase-1].budget;
+  jobsCreated += 20; // 1 job per section
+  activityLog.unshift(`✓ ${projectPhases[currentPhase-1].name} awarded to ${winner.name} for ${winner.price}`);
+
+  document.getElementById('voteCount').innerText = '20';
   document.getElementById('progressBar').style.width = '100%';
   document.getElementById('winnerName').innerText = winner.name;
-  document.getElementById('winnerVotes').innerText = votes[winnerId];
+  document.getElementById('winnerVotes').innerText = phase.votes[winnerId];
   document.getElementById('winnerPrice').innerText = winner.price;
   document.getElementById('resultCard').classList.remove('hidden');
   document.getElementById('voteBtn').disabled = true;
+
+  updateDashboard();
+  renderPhases();
+}
+
+function startNextPhase(){
+  if(currentPhase < 5){
+    selectPhase(currentPhase + 1);
+  }
+  document.getElementById('resultCard').classList.add('hidden');
+}
+
+function updateDashboard(){
+  document.getElementById('totalSpent').innerText = `R${totalSpent.toLocaleString()}`;
+  document.getElementById('jobsCreated').innerText = jobsCreated;
+  document.getElementById('phasesComplete').innerText = `${Object.values(phaseData).filter(p=>p.completed).length}/5`;
+
+  const percent = Math.round((totalSpent/10000000)*100);
+  document.getElementById('projectProgress').style.width = percent + '%';
+  document.getElementById('projectProgressText').innerText = percent + '% Complete';
+
+  // Update phase breakdown
+  const div = document.getElementById('phaseBreakdown');
+  div.innerHTML = '';
+  projectPhases.forEach(p => {
+    const status = phaseData[p.id].completed? '✓ Complete' : 'Pending';
+    const winner = phaseData[p.id].winner? ` - ${phaseData[p.id].winner.name}` : '';
+    div.innerHTML += `<div class="metric"><span>${p.name}</span><strong>${status}${winner}</strong></div>`;
+  });
+
+  // Update activity log
+  const logDiv = document.getElementById('activityLog');
+  logDiv.innerHTML = activityLog.map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
 }
 
 function showPreview(input){
@@ -212,9 +376,13 @@ function submitWork(){
   document.getElementById('statusBox').classList.remove('hidden');
   setTimeout(()=>document.getElementById('status2').classList.remove('hidden'),1500);
   setTimeout(()=>document.getElementById('status3').classList.remove('hidden'),3000);
+
+  activityLog.unshift(`✓ Section 7: ${projectPhases[currentPhase-1].name.split(': ')[1]} submitted for payment`);
+  updateDashboard();
 }
 
-renderSuppliers();
+renderPhases();
+selectPhase(1);
 </script>
 </body>
-  </html>
+</html>
