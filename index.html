@@ -310,7 +310,7 @@ async function signPetition(){
       method: 'POST',
       mode: 'cors',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({fullName: name, idNumber: id, province: province})
+      body: JSON.stringify({name: name, id: id, province: province})
     });
 
     const result = await response.json();
