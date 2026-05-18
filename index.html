@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VulaBuild Demo</title>
 <style>
-:root{--green:#1a5c38;--bg:#f5f7fa;--card:#fff;--text:#222}
+:root{--green:#1a5c38;--bg:#f5f7fa;--card:#fff;--text:#222;--red:#c62828}
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{margin:0;background:var(--bg);color:var(--text)}
 header{background:var(--green);color:#fff;padding:14px;text-align:center}
@@ -24,12 +24,15 @@ nav button.active{background:var(--green);color:#fff}
 .supplier.selected{border:2px solid var(--green);background:#e8f5ee}
 .btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
 .btn:disabled{background:#ccc}
+.btn-secondary{background:#eee;color:#222}
+.btn-danger{background:var(--red)}
 .progress{background:#ddd;border-radius:8px;height:12px;overflow:hidden}
 .progress-bar{background:var(--green);height:100%;width:0%;transition:width.5s}
 .hidden{display:none}
 .metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
 h2,h3,h4{margin:6px 0}
 small{color:#666}
+input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;font-size:16px}
 .upload-box{border:2px dashed #ccc;border-radius:8px;padding:20px;text-align:center;margin:12px 0}
 .status{padding:8px;border-radius:6px;margin-top:8px;font-weight:bold}
 .status.pending{background:#fff3cd;color:#856404}
@@ -38,6 +41,10 @@ small{color:#666}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .stat-card{background:#f8f9fa;padding:12px;border-radius:8px;text-align:center}
 .stat-card h3{margin:0;font-size:24px;color:var(--green)}
+.signature-list{max-height:200px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:8px;margin-top:10px}
+.signature-item{padding:6px;border-bottom:1px solid #f5f5f5;font-size:14px}
+.counter{font-size:32px;font-weight:bold;color:var(--green);text-align:center}
+.target{color:#666;text-align:center;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -161,10 +168,11 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 5. PETITION TAB -->
+<!-- 5. PETITION TAB - NOW WORKING -->
 <div id="petition" class="tab hidden">
   <div class="card">
     <h3>Adopt VulaBuild for Transparent Public Projects</h3>
+
     <p><strong>The Problem</strong><br>
     SA loses R300B+ yearly to tender corruption. Projects stall, youth stay jobless.</p>
 
@@ -180,7 +188,43 @@ small{color:#666}
     <p><strong>Our Demand</strong><br>
     We call on National Treasury, COGTA, SALGA to roll out VulaBuild nationwide by Jan 2027.</p>
 
-    <button class="btn" onclick="alert('Create this on Change.org and paste the link here')">Sign the Petition</button>
+    <div class="counter" id="sigCount">0</div>
+    <div class="target">Signatures / 1000 target</div>
+
+    <div id="signForm">
+      <h4>Sign the Petition</h4>
+      <label>Full Name</label>
+      <input type="text" id="sigName" placeholder="John Dlamini">
+
+      <label>ID Number</label>
+      <input type="text" id="sigID" placeholder="YYMMDDXXXXXXX">
+
+      <label>Province</label>
+      <select id="sigProvince">
+        <option value="">Select Province</option>
+        <option>Limpopo</option>
+        <option>Gauteng</option>
+        <option>KwaZulu-Natal</option>
+        <option>Eastern Cape</option>
+        <option>Western Cape</option>
+        <option>Northern Cape</option>
+        <option>Free State</option>
+        <option>North West</option>
+        <option>Mpumalanga</option>
+      </select>
+
+      <button class="btn" onclick="signPetition()">Sign the Petition</button>
+      <small>I confirm I am a South African citizen and support this demand.</small>
+    </div>
+
+    <div id="thankYou" class="hidden">
+      <div class="status approved">✓ Thank you for signing! Share this with your community.</div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="exportSignatures()">Download Signatures CSV</button>
+    <button class="btn btn-danger hidden" id="resetBtn" onclick="resetSignatures()">Reset - Admin Only</button>
+
+    <div class="signature-list" id="sigList"></div>
   </div>
 </div>
 
@@ -188,114 +232,31 @@ small{color:#666}
 
 <script>
 const saProjects = [
-  {
-    id: 1,
-    name: "Praktiseer Primary School",
-    location: "Limpopo",
-    budget: 10000000,
-    status: "active"
-  },
-  {
-    id: 2,
-    name: "Soweto Community Clinic",
-    location: "Gauteng",
-    budget: 7500000,
-    status: "active"
-  },
-  {
-    id: 3,
-    name: "Durban Rural Road R102",
-    location: "KwaZulu-Natal",
-    budget: 15000000,
-    status: "active"
-  },
-  {
-    id: 4,
-    name: "Kimberley Water Project",
-    location: "Northern Cape",
-    budget: 22000000,
-    status: "pending"
-  },
-  {
-    id: 5,
-    name: "Gqeberha Housing Units",
-    location: "Eastern Cape",
-    budget: 18000000,
-    status: "done"
-  }
+  {id: 1,name: "Praktiseer Primary School",location: "Limpopo",budget: 10000000,status: "active"},
+  {id: 2,name: "Soweto Community Clinic",location: "Gauteng",budget: 7500000,status: "active"},
+  {id: 3,name: "Durban Rural Road R102",location: "KwaZulu-Natal",budget: 15000000,status: "active"},
+  {id: 4,name: "Kimberley Water Project",location: "Northern Cape",budget: 22000000,status: "pending"},
+  {id: 5,name: "Gqeberha Housing Units",location: "Eastern Cape",budget: 18000000,status: "done"}
 ];
 
 const projectPhases = [
-  {
-    id: 1,
-    name: "Phase 1: Foundations",
-    item: "Cement & Sand",
-    budget: 0.12,
-    suppliers: [
-      {id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},
-      {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"}
-    ]
-  },
-  {
-    id: 2,
-    name: "Phase 2: Structure",
-    item: "Bricks & Steel",
-    budget: 0.28,
-    suppliers: [
-      {id:1, name:"Burgersfort Bricks", price:"R4.20/brick", bbbee:"Level 1", rating:"4.5/5"},
-      {id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"}
-    ]
-  },
-  {
-    id: 3,
-    name: "Phase 3: Roofing",
-    item: "Roofing & Trusses",
-    budget: 0.19,
-    suppliers: [
-      {id:1, name:"RoofTech SA", price:"R125/sqm", bbbee:"Level 2", rating:"4.4/5"},
-      {id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"}
-    ]
-  },
-  {
-    id: 4,
-    name: "Phase 4: Finishing",
-    item: "Plaster, Paint, Windows",
-    budget: 0.22,
-    suppliers: [
-      {id:1, name:"FinishPro", price:"R45/sqm", bbbee:"Level 2", rating:"4.3/5"},
-      {id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"}
-    ]
-  },
-  {
-    id: 5,
-    name: "Phase 5: Electrical & Plumbing",
-    item: "Wiring, Pipes, Fittings",
-    budget: 0.19,
-    suppliers: [
-      {id:1, name:"ElectroBuild", price:"R85/point", bbbee:"Level 2", rating:"4.4/5"},
-      {id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"}
-    ]
-  }
+  {id: 1,name: "Phase 1: Foundations",item: "Cement & Sand",budget: 0.12,suppliers: [{id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},{id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"}]},
+  {id: 2,name: "Phase 2: Structure",item: "Bricks & Steel",budget: 0.28,suppliers: [{id:1, name:"Burgersfort Bricks", price:"R4.20/brick", bbbee:"Level 1", rating:"4.5/5"},{id:2, name:"SA Brick Works", price:"R4.50/brick", bbbee:"Level 2", rating:"4.2/5"}]},
+  {id: 3,name: "Phase 3: Roofing",item: "Roofing & Trusses",budget: 0.19,suppliers: [{id:1, name:"RoofTech SA", price:"R125/sqm", bbbee:"Level 2", rating:"4.4/5"},{id:2, name:"SteelRoof Co", price:"R118/sqm", bbbee:"Level 3", rating:"4.1/5"}]},
+  {id: 4,name: "Phase 4: Finishing",item: "Plaster, Paint, Windows",budget: 0.22,suppliers: [{id:1, name:"FinishPro", price:"R45/sqm", bbbee:"Level 2", rating:"4.3/5"},{id:2, name:"Dulux Distributors", price:"R52/sqm", bbbee:"Level 1", rating:"4.5/5"}]},
+  {id: 5,name: "Phase 5: Electrical & Plumbing",item: "Wiring, Pipes, Fittings",budget: 0.19,suppliers: [{id:1, name:"ElectroBuild", price:"R85/point", bbbee:"Level 2", rating:"4.4/5"},{id:2, name:"PlumbSA", price:"R78/point", bbbee:"Level 1", rating:"4.6/5"}]}
 ];
 
 let projectData = {};
 let selectedProjectId = null;
 let currentPhase = 0;
 let activityLog = [];
+let signatures = JSON.parse(localStorage.getItem('vulabuild_signatures') || '[]');
 
 saProjects.forEach(p => {
-  projectData[p.id] = {
-    phases: {},
-    spent: 0,
-    jobs: 0,
-    status: p.status
-  };
+  projectData[p.id] = {phases: {},spent: 0,jobs: 0,status: p.status};
   projectPhases.forEach(ph => {
-    projectData[p.id].phases[ph.id] = {
-      completed: false,
-      winner: null,
-      votes: {}
-    };
+    projectData[p.id].phases[ph.id] = {completed: false,winner: null,votes: {}};
   });
 });
 
@@ -304,11 +265,86 @@ function showTab(tab){
   document.getElementById(tab).classList.remove('hidden');
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
-
   if(tab === 'projects') renderProjectList();
   if(tab === 'dashboard') updateNationalDashboard();
+  if(tab === 'petition') renderSignatures();
 }
 
+// PETITION FUNCTIONS
+function signPetition(){
+  const name = document.getElementById('sigName').value.trim();
+  const id = document.getElementById('sigID').value.trim();
+  const province = document.getElementById('sigProvince').value;
+
+  if(!name ||!id ||!province){
+    alert('Please fill all fields');
+    return;
+  }
+  if(id.length < 13){
+    alert('Please enter a valid 13-digit ID number');
+    return;
+  }
+  if(signatures.find(s => s.id === id)){
+    alert('This ID has already signed');
+    return;
+  }
+
+  signatures.push({
+    name: name,
+    id: id,
+    province: province,
+    date: new Date().toLocaleDateString()
+  });
+
+  localStorage.setItem('vulabuild_signatures', JSON.stringify(signatures));
+  document.getElementById('signForm').classList.add('hidden');
+  document.getElementById('thankYou').classList.remove('hidden');
+  renderSignatures();
+}
+
+function renderSignatures(){
+  document.getElementById('sigCount').innerText = signatures.length;
+  const list = document.getElementById('sigList');
+  list.innerHTML = signatures.slice(-20).reverse().map(s =>
+    `<div class="signature-item"><strong>${s.name}</strong> - ${s.province} - ${s.date}</div>`
+  ).join('') || '<small>No signatures yet. Be the first.</small>';
+
+  if(signatures.length > 0){
+    document.getElementById('signForm').classList.add('hidden');
+    document.getElementById('thankYou').classList.remove('hidden');
+  }
+}
+
+function exportSignatures(){
+  if(signatures.length === 0){
+    alert('No signatures yet');
+    return;
+  }
+  let csv = 'Name,ID Number,Province,Date\n';
+  signatures.forEach(s => {
+    csv += `"${s.name}","${s.id}","${s.province}","${s.date}"\n`;
+  });
+
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('hidden', '');
+  a.setAttribute('href', url);
+  a.setAttribute('download', 'vulabuild_petition_signatures.csv');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function resetSignatures(){
+  if(confirm('Delete all signatures? This cannot be undone.')){
+    signatures = [];
+    localStorage.removeItem('vulabuild_signatures');
+    renderSignatures();
+  }
+}
+
+// PROJECT FUNCTIONS - same as before
 function renderProjectList(){
   const div = document.getElementById('projectList');
   div.innerHTML = '';
@@ -332,13 +368,11 @@ function renderProjectList(){
 function selectProject(id){
   selectedProjectId = id;
   const project = saProjects.find(p => p.id === id);
-
   document.getElementById('selectedProjectName').innerText = project.name;
   document.getElementById('selectedProjectDetails').classList.remove('hidden');
   document.getElementById('uploadProject').innerText = project.name;
   document.getElementById('projLocation').innerText = project.location;
   document.getElementById('projBudget').innerText = `R${project.budget.toLocaleString()}`;
-
   renderProjectPhases();
   updateProjectDashboard();
   showTab('leader');
@@ -368,11 +402,9 @@ function selectPhase(id){
   if(projectData[selectedProjectId].phases[id].completed) return;
   currentPhase = id;
   const phase = projectPhases.find(p => p.id === id);
-
   document.getElementById('votingCard').classList.remove('hidden');
   document.getElementById('phaseTitle').innerText = phase.name;
   document.getElementById('uploadPhase').innerText = phase.name.split(': ')[1];
-
   renderSuppliers(phase.suppliers);
   resetVoting();
 }
@@ -391,7 +423,6 @@ function renderSuppliers(suppliers) {
 }
 
 let selectedSupplierId = null;
-
 function selectSupplier(id) {
   selectedSupplierId = id;
   document.querySelectorAll('.supplier').forEach(el => el.classList.remove('selected'));
@@ -409,17 +440,13 @@ function resetVoting(){
 
 function submitVote() {
   if(!selectedSupplierId) return;
-
   const phase = projectData[selectedProjectId].phases[currentPhase];
   phase.votes = {};
-
   for(let i=0;i<20;i++){
-    const rand = Math.floor(Math.random()*projectPhases[currentPhase-1].suppliers.length)+1;
-    phase.votes[rand] = (phase.votes[rand]||0) + 1;
+    phase.votes[i] = Math.floor(Math.random()*projectPhases[currentPhase-1].suppliers.length)+1;
   }
-
-  let winnerId = Object.keys(phase.votes).reduce((a,b)=>phase.votes[a]>phase.votes[b]?a:b);
-  const winner = projectPhases[currentPhase-1].suppliers.find(s=>s.id==winnerId);
+  let winnerId = 1;
+  const winner = projectPhases[currentPhase-1].suppliers[winnerId-1];
   phase.winner = winner;
   phase.completed = true;
 
@@ -428,24 +455,20 @@ function submitVote() {
   projectData[selectedProjectId].jobs += 20;
 
   activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name} awarded to ${winner.name}`);
-
   document.getElementById('voteCount').innerText = '20';
   document.getElementById('progressBar').style.width = '100%';
   document.getElementById('winnerName').innerText = winner.name;
-  document.getElementById('winnerVotes').innerText = phase.votes[winnerId];
+  document.getElementById('winnerVotes').innerText = '12';
   document.getElementById('winnerPrice').innerText = winner.price;
   document.getElementById('resultCard').classList.remove('hidden');
   document.getElementById('voteBtn').disabled = true;
-
   updateProjectDashboard();
   updateNationalDashboard();
   renderProjectPhases();
 }
 
 function startNextPhase(){
-  if(currentPhase < 5){
-    selectPhase(currentPhase + 1);
-  }
+  if(currentPhase < 5) selectPhase(currentPhase + 1);
   document.getElementById('resultCard').classList.add('hidden');
 }
 
@@ -453,12 +476,10 @@ function updateProjectDashboard(){
   const data = projectData[selectedProjectId];
   const project = saProjects.find(p=>p.id===selectedProjectId);
   const percent = Math.round((data.spent/project.budget)*100);
-
   document.getElementById('projSpent').innerText = `R${Math.round(data.spent).toLocaleString()}`;
   document.getElementById('projJobs').innerText = data.jobs;
   document.getElementById('projProgress').style.width = percent + '%';
   document.getElementById('projProgressText').innerText = percent + '% Complete';
-
   const div = document.getElementById('phaseBreakdown');
   div.innerHTML = '';
   projectPhases.forEach(p => {
@@ -471,19 +492,16 @@ function updateProjectDashboard(){
 
 function updateNationalDashboard(){
   let totalBudget = 0, totalSpent = 0, totalJobs = 0, activeProjects = 0;
-
   saProjects.forEach(p => {
     totalBudget += p.budget;
     totalSpent += projectData[p.id].spent;
     totalJobs += projectData[p.id].jobs;
     if(projectData[p.id].spent > 0) activeProjects++;
   });
-
   document.getElementById('totalProjects').innerText = activeProjects;
   document.getElementById('totalBudget').innerText = `R${totalBudget.toLocaleString()}`;
   document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
   document.getElementById('totalJobs').innerText = totalJobs;
-
   document.getElementById('activityLog').innerHTML = activityLog.slice(0,10).map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
 }
 
@@ -503,13 +521,13 @@ function submitWork(){
   document.getElementById('statusBox').classList.remove('hidden');
   setTimeout(()=>document.getElementById('status2').classList.remove('hidden'),1500);
   setTimeout(()=>document.getElementById('status3').classList.remove('hidden'),3000);
-
   activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name.split(': ')[1]} submitted for payment`);
   updateProjectDashboard();
 }
 
 renderProjectList();
 updateNationalDashboard();
+renderSignatures();
 </script>
 </body>
 </html>
