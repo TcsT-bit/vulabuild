@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VulaBuild Demo</title>
+<style>
+:root{--green:#1a5c38;--bg:#f5f7fa;--card:#fff;--text:#222}
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text)}
+header{background:var(--green);color:#fff;padding:14px;text-align:center}
+nav{display:flex;gap:8px;padding:10px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.05);overflow-x:auto}
+nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cursor:pointer;white-space:nowrap}
+nav button.active{background:var(--green);color:#fff}
+.container{padding:16px;max-width:700px;margin:auto}
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
+.supplier{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer}
+.supplier.selected{border:2px solid var(--green);background:#e8f5ee}
+.btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
+.btn:disabled{background:#ccc}
+.progress{background:#ddd;border-radius:8px;height:12px;overflow:hidden}
+.progress-bar{background:var(--green);height:100%;width:0%;transition:width.5s}
+.hidden{display:none}
+.metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+h2,h3{margin:6px 0}
+small{color:#666}
+.upload-box{border:2px dashed #ccc;border-radius:8px;padding:20px;text-align:center;margin:12px 0}
+.status{padding:8px;border-radius:6px;margin-top:8px;font-weight:bold}
+.status.pending{background:#fff3cd;color:#856404}
+.status.approved{background:#d4edda;color:#155724}
+.status.paid{background:#cce5ff;color:#004085}
+</style>
+</head>
+<body>
+<header>
+  <h2>VulaBuild</h2>
+  <small>Open Tenders. Open Jobs. Open Future.</small>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('leader')">Leader App</button>
+  <button onclick="showTab('upload')">Upload & Get Paid</button>
+  <button onclick="showTab('dashboard')">Public Dashboard</button>
+  <button onclick="showTab('petition')">Petition</button>
+</nav>
+
+<div class="container">
+
+<!-- 1. LEADER APP TAB -->
+<div id="leader" class="tab">
+  <div class="card">
+    <h3>Phase 1: Foundations</h3>
+    <p>Choose cement supplier. Your vote is private.</p>
+    <div id="suppliers"></div>
+    <button class="btn" id="voteBtn" onclick="submitVote()" disabled>Submit Vote</button>
+    <div style="margin-top:16px">
+      <small>Voting Progress: <span id="voteCount">0</span>/20 sections</small>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h3>Consensus Reached!</h3>
+    <p><strong id="winnerName"></strong> won with <span id="winnerVotes"></span> votes.</p>
+    <p>Price locked at <strong id="winnerPrice"></strong>. Work can start.</p>
+  </div>
+</div>
+
+<!-- 2. UPLOAD & GET PAID TAB -->
+<div id="upload" class="tab hidden">
+  <div class="card">
+    <h3>Submit Work for Payment</h3>
+    <p>Section 7 - Foundations Complete</p>
+
+    <div class="upload-box">
+      <p>📷 Tap to add photo of completed work</p>
+      <input type="file" accept="image/*" onchange="showPreview(this)">
+      <img id="preview" style="max-width:100%;margin-top:10px;display:none;border-radius:8px">
+    </div>
+
+    <div id="gps">📍 Location: 24.9°S, 30.3°E - Praktiseer</div>
+
+    <button class="btn" id="submitBtn" onclick="submitWork()" disabled>Submit for Inspection</button>
+
+    <div id="statusBox" class="hidden">
+      <div class="status pending" id="status1">1. Submitted - Awaiting Inspector</div>
+      <div class="status hidden" id="status2">2. Inspector Approved ✓</div>
+      <div class="status hidden" id="status3">3. Payment Released: R85,000 ✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. PUBLIC DASHBOARD TAB -->
+<div id="dashboard" class="tab hidden">
+  <div class="card">
+    <h3>Limpopo - Praktiseer School Project</h3>
+    <div class="metric"><span>Total Budget</span><strong>R10,000,000</strong></div>
+    <div class="metric"><span>Spent</span><strong>R2,425,000</strong></div>
+    <div class="metric"><span>Jobs Created</span><strong>342</strong></div>
+    <div class="metric"><span>Projects Stalled</span><strong>0</strong></div>
+    <div class="metric"><span>Sections Active</span><strong>20/20</strong></div>
+    <div style="margin-top:12px">
+      <div class="progress"><div class="progress-bar" style="width:48%"></div></div>
+      <small>48% Complete</small>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Recent Activity</h3>
+    <p>✓ Section 7: Foundations approved & paid<br>
+    ✓ Section 12: Bricks delivered<br>
+    ✓ Insurance claim approved for broken mixer</p>
+  </div>
+</div>
+
+<!-- 4. PETITION TAB -->
+<div id="petition" class="tab hidden">
+  <div class="card">
+    <h3>Adopt VulaBuild for Transparent Public Projects</h3>
+    <p><strong>The Problem</strong><br>
+    SA loses R300B+ yearly to tender corruption. Projects stall, youth stay jobless.</p>
+
+    <p><strong>The Solution</strong><br>
+    VulaBuild splits contracts into community-managed projects. Leaders vote on suppliers, payments only release on verified work, everything is logged publicly.</p>
+
+    <p><strong>Why It Works</strong><br>
+    - Kills corruption with transparent logs<br>
+    - Creates jobs: 1 contract = 20 micro-businesses<br>
+    - Legal under Public Procurement Act 2024<br>
+    - Works offline with USSD/SMS backup</p>
+
+    <p><strong>Our Demand</strong><br>
+    We call on National Treasury, COGTA, SALGA to pilot VulaBuild in 3 municipalities by Jan 2027.</p>
+
+    <button class="btn" onclick="alert('Create this on Change.org and paste the link here')">Sign the Petition</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const suppliers = [
+  {id:1, name:"Limpopo Cement Co", price:"R85/bag", bbbee:"Level 2", rating:"4.6/5"},
+  {id:2, name:"Burgersfort Build", price:"R92/bag", bbbee:"Level 1", rating:"4.3/5"},
+  {id:3, name:"SA Cement Group", price:"R88/bag", bbbee:"Level 3", rating:"4.1/5"},
+  {id:4, name:"Local Mix Ltd", price:"R90/bag", bbbee:"Level 4", rating:"4.5/5"}
+];
+
+let selectedId = null;
+let votes = {1:0,2:0,3:0,4:0};
+let totalVotes = 0;
+
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function renderSuppliers() {
+  const div = document.getElementById('suppliers');
+  div.innerHTML = '';
+  suppliers.forEach(s => {
+    div.innerHTML += `
+      <div class="supplier" onclick="selectSupplier(${s.id})" id="sup${s.id}">
+        <strong>${s.name}</strong><br>
+        <small>Price: ${s.price} | B-BBEE: ${s.bbbee} | Rating: ${s.rating}</small>
+      </div>
+    `;
+  });
+}
+
+function selectSupplier(id) {
+  selectedId = id;
+  document.querySelectorAll('.supplier').forEach(el => el.classList.remove('selected'));
+  document.getElementById('sup'+id).classList.add('selected');
+  document.getElementById('voteBtn').disabled = false;
+}
+
+function submitVote() {
+  if(!selectedId) return;
+  for(let i=0;i<20;i++){
+    let rand = Math.floor(Math.random()*4)+1;
+    votes++;
+  }
+  totalVotes=20;
+
+  let winnerId = Object.keys(votes).reduce((a,b)=>votes[a]>votes[b]?a:b);
+  let winner = suppliers.find(s=>s.id==winnerId);
+
+  document.getElementById('voteCount').innerText = totalVotes;
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('winnerName').innerText = winner.name;
+  document.getElementById('winnerVotes').innerText = votes[winnerId];
+  document.getElementById('winnerPrice').innerText = winner.price;
+  document.getElementById('resultCard').classList.remove('hidden');
+  document.getElementById('voteBtn').disabled = true;
+}
+
+function showPreview(input){
+  if(input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('preview').src = e.target.result;
+      document.getElementById('preview').style.display = 'block';
+      document.getElementById('submitBtn').disabled = false;
+    }
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function submitWork(){
+  document.getElementById('statusBox').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('status2').classList.remove('hidden'),1500);
+  setTimeout(()=>document.getElementById('status3').classList.remove('hidden'),3000);
+}
+
+renderSuppliers();
+</script>
+</body>
+  </html>
