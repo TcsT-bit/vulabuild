@@ -234,10 +234,18 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
     <h3>Adopt VulaBuild for Transparent Public Projects</h3>
 
     <p><strong>The Problem</strong><br>
-    SA loses R300B+ yearly to tender corruption. Projects stall, youth stay jobless.</p>
+    Right now, your clinic isn’t built, your road stays broken, and your brother stays unemployed — not because there’s no money, but because it’s stolen before it reaches you.
+    <br><br>
+    Every year, over R300 billion meant for schools, water, clinics and roads vanishes through secret tenders and inflated contracts. That’s R800 million gone every single day while communities wait. Projects start and stop. Contractors change names. No one is held accountable.
+    <br><br>
+    This isn’t just corruption. It’s stolen futures.</p>
 
     <p><strong>The Solution</strong><br>
-    VulaBuild tracks ALL public projects in one platform. From Limpopo schools to KZN roads.</p>
+    VulaBuild brings every public project into the light. One platform, for every school in Limpopo, every road in KZN, every clinic in the Eastern Cape.
+    <br><br>
+    You see who got the contract, how much it costs, what phase it’s on, and who’s building it — in real time, from your phone. No more guessing. No more “it’s loading.” If a contractor disappears with the money, the whole country sees it.
+    <br><br>
+    Transparency kills corruption. And when corruption dies, jobs, services, and dignity are born.</p>
 
     <p><strong>Why It Works</strong><br>
     - Kills corruption with transparent logs<br>
@@ -600,6 +608,7 @@ function showPreview(input){
   if(input.files && input.files[0]){
     const reader = new FileReader();
     reader.onload = e => {
+      document.getElementById('preview').src = e.target.result;
       document.getElementById('preview').src = e.target.result;
       document.getElementById('preview').style.display = 'block';
       document.getElementById('submitBtn').disabled = false;
