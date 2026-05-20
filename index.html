@@ -43,13 +43,12 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 .counter{font-size:32px;font-weight:bold;color:var(--green);text-align:center}
 .target{color:#666;text-align:center;margin-bottom:16px}
 
-/* Added for collapsible budget section */
-.collapsible-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.collapsible-header h3{margin:0}
-.collapsible-content{max-height:0;overflow:hidden;transition:max-height 0.3s ease-out}
-.collapsible-content.open{max-height:1000px}
-.toggle-icon{transition:transform 0.3s;font-size:20px;color:var(--green)}
-.toggle-icon.open{transform:rotate(180deg)}
+/* Added for budget breakdown */
+.budget-breakdown h3{margin:0 0 12px 0}
+.budget-breakdown h4{margin:16px 0 8px 0;font-size:16px}
+.budget-breakdown ul{margin:0;padding-left:20px}
+.budget-breakdown li{margin-bottom:8px;line-height:1.4}
+.budget-breakdown.sector-title{font-weight:bold}
 </style>
 </head>
 <body>
@@ -97,49 +96,50 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 
 <!-- 2. ALL PROJECTS TAB -->
 <div id="projects" class="tab hidden">
-  <!-- Added SA Budget 2027 Section - Collapsible -->
-  <div class="card" style="background:#e8f5ee;border-left:4px solid #1a5c38;">
-    <div class="collapsible-header" onclick="toggleBudgetCard()">
-      <h3>SA National Budget 2027 Outlook</h3>
-      <span class="toggle-icon" id="budgetToggle">▼</span>
-    </div>
-    <div class="collapsible-content" id="budgetContent">
-      <p><strong>Total Consolidated Spend by 2027/28: R2.83 Trillion</strong></p>
-      <p>Infrastructure spend over 3 years: <strong>R1 Trillion+</strong></p>
+  <!-- Added budget breakdown card to match WhatsApp format -->
+  <div class="card budget-breakdown" style="background:#1e1e1e;color:#fff;">
+    <h3>SA 2027 Projects & Budget Breakdown</h3>
 
-      <div class="grid" style="margin-top:12px">
-        <div class="stat-card">
-          <h3>R402B</h3>
-          <small>Transport & Roads</small>
-        </div>
-        <div class="stat-card">
-          <h3>R219B</h3>
-          <small>Energy</small>
-        </div>
-        <div class="stat-card">
-          <h3>R156B</h3>
-          <small>Water & Sanitation</small>
-        </div>
-        <div class="stat-card">
-          <h3>R10.4B</h3>
-          <small>Science & Innovation</small>
-        </div>
-      </div>
+    <h4 class="sector-title">1. Transport & Roads – R402B (3 yrs to 2027/28)</h4>
+    <ul>
+      <li>SANRAL: R100B for national road maintenance</li>
+      <li>Provincial roads: 16,000+ lane-km to be resealed</li>
+      <li>Passenger Rail Agency: Rebuild commuter lines for reliable service by 2027</li>
+      <li>Logistics reform: Open rail to private operators, R200B private investment expected</li>
+    </ul>
 
-      <div style="margin-top:16px">
-        <h4>Key Projects Starting 2027</h4>
-        <ul style="padding-left:18px;margin:8px 0">
-          <li><strong>Mkhomazi Water Project</strong> – Construction starts Nov 2027. Supply 5M households in KZN.</li>
-          <li><strong>SANRAL Roads</strong> – R100B to maintain national roads.</li>
-          <li><strong>Transmission Expansion</strong> – 14,000km new lines via Independent Transmission Project.</li>
-          <li><strong>Provincial Roads</strong> – 16,000+ lane-km to be resealed.</li>
-        </ul>
-      </div>
+    <h4 class="sector-title">2. Water & Sanitation – R156.3B (3 yrs)</h4>
+    <ul>
+      <li>Mkhomazi Project: Construction starts Nov 2027. Supply water to 5M households in eThekwini + 4 KZN districts</li>
+      <li>Large-scale dams: Several entering construction through 2027</li>
+    </ul>
 
-      <div class="disclaimer" style="margin-top:12px">
-        <strong>Source:</strong> National Treasury 2025 Budget Review, Dept of Water & Sanitation, Dept of Science & Innovation.
-        Full municipal project list releases in MTBPS Oct/Nov 2026.
-      </div>
+    <h4 class="sector-title">3. Energy – R219.2B (3 yrs)</h4>
+    <ul>
+      <li>Transmission expansion: 14,000 km new lines via Independent Transmission Project, major builds from 2027</li>
+      <li>Eskom & IPPs: Rollout of renewables and gas to close supply gap</li>
+    </ul>
+
+    <h4 class="sector-title">4. Science, Tech & Innovation – R10.4B (2026/27)</h4>
+    <ul>
+      <li>Focus on research infrastructure, skills, R&D to reach 1.5% of GDP</li>
+    </ul>
+
+    <h4 class="sector-title">5. Social Wage – 61% of non-interest spend</h4>
+    <ul>
+      <li>Health: R298.9B (2025/26, growing)</li>
+      <li>Education/Learning & Culture: R508.7B (2025/26, growing)</li>
+      <li>Social Development: R422.3B (2025/26, growing)</li>
+    </ul>
+
+    <h4 class="sector-title">6. Provincial Highlights</h4>
+    <ul>
+      <li>Western Cape: R9.86B for infrastructure delivery 2026/27</li>
+      <li>KZN: Mkhomazi flagship + related roads/water projects</li>
+    </ul>
+
+    <div class="disclaimer" style="background:#2a2a2a;border-left:4px solid var(--green);margin-top:16px">
+      <strong>Note:</strong> Full municipal project list releases in MTBPS Oct/Nov 2026.
     </div>
   </div>
 
@@ -168,15 +168,6 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
     <div class="stat-card">
       <h3 id="totalJobs">0</h3>
       <small>Jobs Created</small>
-    </div>
-    <!-- Added national figures to dashboard grid -->
-    <div class="stat-card" style="background:#e8f5ee;border:2px solid #1a5c38;">
-      <h3>R2.83T</h3>
-      <small>Consolidated Spend 2027/28</small>
-    </div>
-    <div class="stat-card" style="background:#e8f5ee;border:2px solid #1a5c38;">
-      <h3>R1T+</h3>
-      <small>Infrastructure 2025-2028</small>
     </div>
   </div>
 
@@ -339,14 +330,6 @@ function showTab(tab){
   if(tab === 'projects') renderProjectList();
   if(tab === 'dashboard') updateNationalDashboard();
   if(tab === 'petition') loadSignatureCount();
-}
-
-// Added: Toggle function for budget card
-function toggleBudgetCard(){
-  const content = document.getElementById('budgetContent');
-  const icon = document.getElementById('budgetToggle');
-  content.classList.toggle('open');
-  icon.classList.toggle('open');
 }
 
 // PETITION FUNCTIONS - SECURE + 100k target
@@ -558,7 +541,6 @@ function updateNationalDashboard(){
     if(projectData[p.id].spent > 0) activeProjects++;
   });
   document.getElementById('totalProjects').innerText = activeProjects;
-  // Changed to show national figure
   document.getElementById('totalBudget').innerText = `R2.83T`;
   document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
   document.getElementById('totalJobs').innerText = totalJobs;
