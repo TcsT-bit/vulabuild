@@ -397,6 +397,7 @@ async function loadSignatureCount() {
   }
 }
 
+// FIXED: Use text/plain to avoid CORS preflight
 async function signPetition(){
   const name = document.getElementById('sigName').value.trim();
   const id = document.getElementById('sigID').value.trim();
@@ -415,9 +416,11 @@ async function signPetition(){
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'cors',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({name: name, id: id, province: province})
     });
+
+    if (!response.ok) throw new Error('Network response was not ok');
 
     const result = await response.json();
 
@@ -430,11 +433,13 @@ async function signPetition(){
       document.getElementById('signForm').classList.add('hidden');
       document.getElementById('thankYou').classList.remove('hidden');
       setTimeout(loadSignatureCount, 2000);
+    } else {
+      throw new Error(result.message || 'Unknown error');
     }
 
   } catch (err) {
-    alert('Submission failed. Please try again.');
     console.error(err);
+    alert('Submission failed. Please try again.');
   }
 }
 
@@ -608,7 +613,6 @@ function showPreview(input){
   if(input.files && input.files[0]){
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById('preview').src = e.target.result;
       document.getElementById('preview').src = e.target.result;
       document.getElementById('preview').style.display = 'block';
       document.getElementById('submitBtn').disabled = false;
