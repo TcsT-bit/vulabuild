@@ -42,6 +42,14 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 .stat-card h3{margin:0;font-size:24px;color:var(--green)}
 .counter{font-size:32px;font-weight:bold;color:var(--green);text-align:center}
 .target{color:#666;text-align:center;margin-bottom:16px}
+
+/* Added for collapsible budget section */
+.collapsible-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.collapsible-header h3{margin:0}
+.collapsible-content{max-height:0;overflow:hidden;transition:max-height 0.3s ease-out}
+.collapsible-content.open{max-height:1000px}
+.toggle-icon{transition:transform 0.3s;font-size:20px;color:var(--green)}
+.toggle-icon.open{transform:rotate(180deg)}
 </style>
 </head>
 <body>
@@ -89,6 +97,52 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 
 <!-- 2. ALL PROJECTS TAB -->
 <div id="projects" class="tab hidden">
+  <!-- Added SA Budget 2027 Section - Collapsible -->
+  <div class="card" style="background:#e8f5ee;border-left:4px solid #1a5c38;">
+    <div class="collapsible-header" onclick="toggleBudgetCard()">
+      <h3>SA National Budget 2027 Outlook</h3>
+      <span class="toggle-icon" id="budgetToggle">▼</span>
+    </div>
+    <div class="collapsible-content" id="budgetContent">
+      <p><strong>Total Consolidated Spend by 2027/28: R2.83 Trillion</strong></p>
+      <p>Infrastructure spend over 3 years: <strong>R1 Trillion+</strong></p>
+
+      <div class="grid" style="margin-top:12px">
+        <div class="stat-card">
+          <h3>R402B</h3>
+          <small>Transport & Roads</small>
+        </div>
+        <div class="stat-card">
+          <h3>R219B</h3>
+          <small>Energy</small>
+        </div>
+        <div class="stat-card">
+          <h3>R156B</h3>
+          <small>Water & Sanitation</small>
+        </div>
+        <div class="stat-card">
+          <h3>R10.4B</h3>
+          <small>Science & Innovation</small>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <h4>Key Projects Starting 2027</h4>
+        <ul style="padding-left:18px;margin:8px 0">
+          <li><strong>Mkhomazi Water Project</strong> – Construction starts Nov 2027. Supply 5M households in KZN.</li>
+          <li><strong>SANRAL Roads</strong> – R100B to maintain national roads.</li>
+          <li><strong>Transmission Expansion</strong> – 14,000km new lines via Independent Transmission Project.</li>
+          <li><strong>Provincial Roads</strong> – 16,000+ lane-km to be resealed.</li>
+        </ul>
+      </div>
+
+      <div class="disclaimer" style="margin-top:12px">
+        <strong>Source:</strong> National Treasury 2025 Budget Review, Dept of Water & Sanitation, Dept of Science & Innovation.
+        Full municipal project list releases in MTBPS Oct/Nov 2026.
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <h3>Projects Across South Africa</h3>
     <p>Data sourced from public records. Every project, every rand, in real time.</p>
@@ -104,8 +158,8 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <small>Active Projects</small>
     </div>
     <div class="stat-card">
-      <h3 id="totalBudget">R0</h3>
-      <small>Total Budget</small>
+      <h3 id="totalBudget">R2.83T</h3>
+      <small title="R2.83 Trillion - Consolidated gov spend 2027/28">Total Budget</small>
     </div>
     <div class="stat-card">
       <h3 id="totalSpent">R0</h3>
@@ -114,6 +168,15 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
     <div class="stat-card">
       <h3 id="totalJobs">0</h3>
       <small>Jobs Created</small>
+    </div>
+    <!-- Added national figures to dashboard grid -->
+    <div class="stat-card" style="background:#e8f5ee;border:2px solid #1a5c38;">
+      <h3>R2.83T</h3>
+      <small>Consolidated Spend 2027/28</small>
+    </div>
+    <div class="stat-card" style="background:#e8f5ee;border:2px solid #1a5c38;">
+      <h3>R1T+</h3>
+      <small>Infrastructure 2025-2028</small>
     </div>
   </div>
 
@@ -276,6 +339,14 @@ function showTab(tab){
   if(tab === 'projects') renderProjectList();
   if(tab === 'dashboard') updateNationalDashboard();
   if(tab === 'petition') loadSignatureCount();
+}
+
+// Added: Toggle function for budget card
+function toggleBudgetCard(){
+  const content = document.getElementById('budgetContent');
+  const icon = document.getElementById('budgetToggle');
+  content.classList.toggle('open');
+  icon.classList.toggle('open');
 }
 
 // PETITION FUNCTIONS - SECURE + 100k target
@@ -487,7 +558,8 @@ function updateNationalDashboard(){
     if(projectData[p.id].spent > 0) activeProjects++;
   });
   document.getElementById('totalProjects').innerText = activeProjects;
-  document.getElementById('totalBudget').innerText = `R${totalBudget.toLocaleString()}`;
+  // Changed to show national figure
+  document.getElementById('totalBudget').innerText = `R2.83T`;
   document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
   document.getElementById('totalJobs').innerText = totalJobs;
   document.getElementById('activityLog').innerHTML = activityLog.slice(0,10).map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
