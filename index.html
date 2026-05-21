@@ -125,11 +125,8 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 
 <!-- 2. ALL PROJECTS TAB -->
 <div id="projects" class="tab hidden">
-
-  <!-- SA 2027 Projects & Budget Breakdown -->
   <div class="budget-card">
     <h3>SA 2027 Projects & Budget Breakdown</h3>
-
     <h4>1. Transport & Roads – R402B (3 yrs to <a href="#">2027/28</a>)</h4>
     <ul>
       <li>SANRAL: R100B for national road maintenance</li>
@@ -137,13 +134,11 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <li>Passenger Rail Agency: Rebuild commuter lines for reliable service by 2027</li>
       <li>Logistics reform: Open rail to private operators, R200B private investment expected</li>
     </ul>
-
     <h4>2. Water & Sanitation – R156.3B (3 yrs)</h4>
     <ul>
       <li>Mkhomazi Project: Construction starts Nov 2027. Supply water to 5M households in eThekwini + 4 KZN districts</li>
       <li>Large-scale dams: Several entering construction through 2027</li>
     </ul>
-
     <h4>3. Energy – R219.2B (3 yrs)</h4>
     <ul>
       <li>Transmission expansion: 14,000 km new lines via Independent Transmission Project, major builds from 2027</li>
@@ -209,17 +204,13 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
   <div class="card">
     <h3>Submit Work for Payment</h3>
     <p><span id="uploadProject">-</span> - <span id="uploadPhase">-</span></p>
-
     <div class="upload-box">
       <p>📷 Tap to add photo of completed work</p>
       <input type="file" accept="image/*" onchange="showPreview(this)">
       <img id="preview" style="max-width:100%;margin-top:10px;display:none;border-radius:8px">
     </div>
-
     <div id="gps">📍 GPS auto-captured</div>
-
     <button class="btn" id="submitBtn" onclick="submitWork()" disabled>Submit for Inspection</button>
-
     <div id="statusBox" class="hidden">
       <div class="status pending" id="status1">1. Submitted - Awaiting Inspector</div>
       <div class="status hidden" id="status2">2. Inspector Approved ✓</div>
@@ -232,7 +223,6 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 <div id="petition" class="tab hidden">
   <div class="card">
     <h3>Adopt VulaBuild for Transparent Public Projects</h3>
-
     <p><strong>The Problem</strong><br>
     Right now, your clinic isn’t built, your road stays broken, and your brother stays unemployed — not because there’s no money, but because it’s stolen before it reaches you.
     <br><br>
@@ -263,10 +253,8 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <h4>Sign the Petition</h4>
       <label>Full Name</label>
       <input type="text" id="sigName" placeholder="John Dlamini">
-
       <label>ID Number</label>
       <input type="text" id="sigID" placeholder="YYMMDDXXXXXXX">
-
       <label>Province</label>
       <select id="sigProvince">
         <option value="">Select Province</option>
@@ -280,7 +268,6 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
         <option>North West</option>
         <option>Mpumalanga</option>
       </select>
-
       <button class="btn" onclick="signPetition()">Sign the Petition</button>
       <small>I confirm I am a South African citizen and support this demand.</small>
     </div>
@@ -307,7 +294,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 
 <script>
 // CONFIG - Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxA5vp4h_hZMJQA0mmnJMBAGo3bccABK2m1fcu0_B1c75waXRWC87yuA0QELyFuD2Iw/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-YRoTpEzNm-fJPgZa73x_9RCU-MOLgj6HMIzn1-1yXI7d_fd8usRJdEa0Ru7lovVGcA/exec';
 const TARGET_SIGNATURES = 100000;
 
 let saProjects = [
@@ -349,26 +336,21 @@ function showTab(tab){
   if(tab === 'petition') loadSignatureCount();
 }
 
-// REAL-TIME UPDATE FUNCTION
 function updateRealTimeData(){
   saProjects.forEach(p => {
     const data = projectData[p.id];
-
     if(data.status === 'active' && data.progress < 100){
       data.progress = Math.min(100, data.progress + Math.floor(Math.random() * 3));
       data.spent = (p.budget * data.progress) / 100;
-
       if(data.progress > 0){
         data.jobs = Math.floor(data.progress / 5) * 20;
       }
-
       if(data.progress >= 100){
         data.status = 'done';
         p.status = 'done';
         activityLog.unshift(`✓ ${p.name} completed`);
       }
     }
-
     if(data.status === 'pending' && Math.random() > 0.95){
       data.status = 'active';
       p.status = 'active';
@@ -376,15 +358,12 @@ function updateRealTimeData(){
       activityLog.unshift(`▶ ${p.name} construction started`);
     }
   });
-
   const now = new Date();
   document.getElementById('lastUpdated').textContent = `Last updated: ${now.toLocaleTimeString('en-ZA')}`;
-
   renderProjectList();
   updateNationalDashboard();
 }
 
-// PETITION FUNCTIONS
 async function loadSignatureCount() {
   try {
     const response = await fetch(`${APPS_SCRIPT_URL}?action=count`);
@@ -397,12 +376,10 @@ async function loadSignatureCount() {
   }
 }
 
-// FIXED: Use text/plain to avoid CORS preflight
 async function signPetition(){
   const name = document.getElementById('sigName').value.trim();
   const id = document.getElementById('sigID').value.trim();
   const province = document.getElementById('sigProvince').value;
-
   if(!name ||!id ||!province){
     alert('Please fill all fields');
     return;
@@ -411,7 +388,6 @@ async function signPetition(){
     alert('Please enter a valid 13-digit ID number');
     return;
   }
-
   try {
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -419,11 +395,8 @@ async function signPetition(){
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({name: name, id: id, province: province})
     });
-
     if (!response.ok) throw new Error('Network response was not ok');
-
     const result = await response.json();
-
     if (result.status === "duplicate") {
       alert("This ID number has already signed the petition.");
       return;
@@ -436,14 +409,12 @@ async function signPetition(){
     } else {
       throw new Error(result.message || 'Unknown error');
     }
-
   } catch (err) {
     console.error(err);
     alert('Submission failed. Please try again.');
   }
 }
 
-// PROJECT FUNCTIONS
 function renderProjectList(){
   const div = document.getElementById('projectList');
   div.innerHTML = '';
@@ -553,12 +524,10 @@ function submitVote() {
   const winner = projectPhases[currentPhase-1].suppliers[winnerId-1];
   phase.winner = winner;
   phase.completed = true;
-
   const phaseBudget = saProjects.find(p=>p.id===selectedProjectId).budget * projectPhases[currentPhase-1].budget;
   projectData[selectedProjectId].spent += phaseBudget;
   projectData[selectedProjectId].jobs += 20;
   projectData[selectedProjectId].progress = Math.min(100, projectData[selectedProjectId].progress + 20);
-
   activityLog.unshift(`✓ ${saProjects.find(p=>p.id===selectedProjectId).name}: ${projectPhases[currentPhase-1].name} awarded to ${winner.name}`);
   document.getElementById('voteCount').innerText = '20';
   document.getElementById('progressBar').style.width = '100%';
@@ -629,7 +598,6 @@ function submitWork(){
   updateProjectDashboard();
 }
 
-// Initialize and start real-time updates
 renderProjectList();
 updateNationalDashboard();
 loadSignatureCount();
