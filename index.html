@@ -3,38 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VulaBuild Demo</title>
+<title>MadibaBuild Petition</title>
 <style>
-:root{--green:#1a5c38;--bg:#f5f7fa;--card:#fff;--text:#222;--red:#c62828}
+:root{
+  --green:#007A4D; /* SA Flag Green */
+  --black:#000; /* SA Flag Black */
+  --gold:#FFB81C; /* SA Flag Gold */
+  --blue:#001489; /* SA Flag Blue */
+  --red:#DE3831; /* SA Flag Red */
+  --bg:#f5f7fa;
+  --card:#fff;
+  --text:#222;
+}
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{margin:0;background:var(--bg);color:var(--text)}
-header{background:var(--green);color:#fff;padding:14px;text-align:center}
+
+header{
+  background:linear-gradient(90deg, var(--black) 0%, var(--green) 50%, var(--blue) 100%);
+  color:#fff;
+  padding:18px;
+  text-align:center
+}
+header h2{margin:0;font-size:1.4rem}
+header small{opacity:0.9}
+
 nav{display:flex;gap:8px;padding:10px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.05);overflow-x:auto}
 nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cursor:pointer;white-space:nowrap}
 nav button.active{background:var(--green);color:#fff}
+
 .container{padding:16px;max-width:800px;margin:auto}
-.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08)}
-footer{padding:16px;text-align:center;font-size:12px;color:#666}
-.disclaimer{background:#f8f9fa;border-left:4px solid var(--green);padding:10px;margin-top:12px;font-size:12px}
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  border-top:4px solid var(--gold)
+}
+
+h3{color:var(--green);margin-top:0}
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:8px;
+  background:var(--green);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:1rem
+}
+.btn:hover{background:#00663f}
+.btn:disabled{background:#ccc}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin:6px 0 12px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  font-size:1rem
+}
+
+.progress{
+  text-align:center;
+  margin:16px 0
+}
+.progress-number{
+  font-size:2rem;
+  font-weight:bold;
+  color:var(--green)
+}
+.progress-bar{
+  width:100%;
+  height:10px;
+  background:#e0e0e0;
+  border-radius:5px;
+  overflow:hidden;
+  margin:8px 0
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg, var(--green), var(--gold));
+  width:0%;
+  transition:width 1s ease-out
+}
+
+.disclaimer{
+  font-size:0.85rem;
+  color:#555;
+  border-left:4px solid var(--red);
+  padding-left:12px;
+  margin-top:20px
+}
+footer{
+  text-align:center;
+  padding:20px;
+  font-size:0.85rem;
+  color:#666
+}
+
 .project-card{border:2px solid #ddd;border-radius:10px;padding:14px;margin:10px 0;cursor:pointer;transition:all 0.3s}
 .project-card:hover{border-color:var(--green);transform:translateY(-2px)}
 .project-card h4{margin:0 0 6px 0;display:flex;align-items:center;gap:8px}
-.badge{background:#1a5c38;color:#fff;padding:3px 8px;border-radius:12px;font-size:11px}
+.badge{background:var(--green);color:#fff;padding:3px 8px;border-radius:12px;font-size:11px}
 .badge.pending{background:#f39c12}
 .badge.done{background:#28a745}
 .live-indicator{display:inline-block;width:8px;height:8px;background:#28a745;border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 .supplier{border:1px solid #ddd;border-radius:8px;padding:12px;margin:8px 0;cursor:pointer}
 .supplier.selected{border:2px solid var(--green);background:#e8f5ee}
-.btn{background:var(--green);color:#fff;border:none;padding:12px;width:100%;border-radius:8px;font-size:16px;margin-top:12px;cursor:pointer}
-.btn:disabled{background:#ccc}
-.progress{background:#ddd;border-radius:8px;height:12px;overflow:hidden}
-.progress-bar{background:var(--green);height:100%;width:0%;transition:width 1s ease-out}
 .hidden{display:none}
 .metric{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
-h2,h3,h4{margin:6px 0}
 small{color:#666}
-input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;font-size:16px}
 .upload-box{border:2px dashed #ccc;border-radius:8px;padding:20px;text-align:center;margin:12px 0}
 .status{padding:8px;border-radius:6px;margin-top:8px;font-weight:bold}
 .status.pending{background:#fff3cd;color:#856404}
@@ -46,7 +127,6 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
 .target{color:#666;text-align:center;margin-bottom:16px}
 .last-updated{font-size:11px;color:#888;text-align:right;margin-top:8px}
 
-/* WhatsApp style breakdown card */
 .budget-card{
   background:#1f1f1f;
   color:#e9e9e9;
@@ -54,36 +134,17 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
   padding:16px;
   margin-bottom:16px;
 }
-.budget-card h3{
-  margin:0 0 12px 0;
-  font-size:18px;
-  color:#fff;
-}
-.budget-card h4{
-  margin:14px 0 6px 0;
-  font-size:15px;
-  font-weight:700;
-  color:#fff;
-}
-.budget-card ul{
-  margin:0;
-  padding-left:20px;
-}
-.budget-card li{
-  margin-bottom:6px;
-  line-height:1.4;
-  color:#e9e9e9;
-}
-.budget-card a{
-  color:#4dabf7;
-  text-decoration:underline;
-}
+.budget-card h3{margin:0 0 12px 0;font-size:18px;color:#fff;}
+.budget-card h4{margin:14px 0 6px 0;font-size:15px;font-weight:700;color:#fff;}
+.budget-card ul{margin:0;padding-left:20px;}
+.budget-card li{margin-bottom:6px;line-height:1.4;color:#e9e9e9;}
+.budget-card a{color:#4dabf7;text-decoration:underline;}
 </style>
 </head>
 <body>
 <header>
-  <h2>VulaBuild</h2>
-  <small>National Platform for Transparent Public Projects</small>
+  <h2>MadibaBuild</h2>
+  <small>Transparency. Jobs. Dignity. For South Africa.</small>
 </header>
 
 <nav>
@@ -111,7 +172,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
     <button class="btn" id="voteBtn" onclick="submitVote()" disabled>Submit Vote</button>
     <div style="margin-top:16px">
       <small>Voting Progress: <span id="voteCount">0</span>/20 sections</small>
-      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress"><div class="progress-bar"><div class="progress-bar" id="progressBar"></div></div></div>
     </div>
   </div>
 
@@ -183,7 +244,7 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <div class="metric"><span>Spent</span><strong id="projSpent">-</strong></div>
       <div class="metric"><span>Jobs</span><strong id="projJobs">-</strong></div>
       <div style="margin-top:12px">
-        <div class="progress"><div class="progress-bar" id="projProgress" style="width:0%"></div></div>
+        <div class="progress-bar"><div class="progress-bar" id="projProgress" style="width:0%"></div></div>
         <small id="projProgressText">0% Complete</small>
       </div>
       <h4 style="margin-top:16px">Phase Breakdown</h4>
@@ -219,38 +280,30 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
   </div>
 </div>
 
-<!-- 5. PETITION TAB - SECURE -->
+<!-- 5. PETITION TAB -->
 <div id="petition" class="tab hidden">
   <div class="card">
-    <h3>Adopt VulaBuild for Transparent Public Projects</h3>
-    <p><strong>The Problem</strong><br>
-    Right now, your clinic isn’t built, your road stays broken, and your brother stays unemployed — not because there’s no money, but because it’s stolen before it reaches you.
-    <br><br>
-    Every year, over R300 billion meant for schools, water, clinics and roads vanishes through secret tenders and inflated contracts. That’s R800 million gone every single day while communities wait. Projects start and stop. Contractors change names. No one is held accountable.
-    <br><br>
-    This isn’t just corruption. It’s stolen futures.</p>
+    <p><strong>Transparency kills corruption.</strong> And when corruption dies, jobs, services, and dignity are born.</p>
 
-    <p><strong>The Solution</strong><br>
-    VulaBuild brings every public project into the light. One platform, for every school in Limpopo, every road in KZN, every clinic in the Eastern Cape.
-    <br><br>
-    You see who got the contract, how much it costs, what phase it’s on, and who’s building it — in real time, from your phone. No more guessing. No more “it’s loading.” If a contractor disappears with the money, the whole country sees it.
-    <br><br>
-    Transparency kills corruption. And when corruption dies, jobs, services, and dignity are born.</p>
+    <h3>Why It Works</h3>
+    <ul>
+      <li>Kills corruption with transparent logs</li>
+      <li>Creates jobs: 1 contract = 20 micro-businesses</li>
+      <li>Legal under Public Procurement Act 2024</li>
+      <li>Works offline with USSD/SMS backup</li>
+    </ul>
 
-    <p><strong>Why It Works</strong><br>
-    - Kills corruption with transparent logs<br>
-    - Creates jobs: 1 contract = 20 micro-businesses<br>
-    - Legal under Public Procurement Act 2024<br>
-    - Works offline with USSD/SMS backup</p>
+    <h3>Our Demand</h3>
+    <p>We call on National Treasury, COGTA, SALGA to roll out MadibaBuild nationwide by Jan 2027.</p>
 
-    <p><strong>Our Demand</strong><br>
-    We call on National Treasury, COGTA, SALGA to roll out VulaBuild nationwide by Jan 2027.</p>
+    <div class="progress">
+      <div class="progress-number" id="sigCount">0</div>
+      <div>Signatures / 100,000 target</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
 
-    <div class="counter" id="sigCount">0</div>
-    <div class="target">Signatures / 100,000 target</div>
-
+    <h3>Sign the Petition</h3>
     <div id="signForm">
-      <h4>Sign the Petition</h4>
       <label>Full Name</label>
       <input type="text" id="sigName" placeholder="John Dlamini">
       <label>ID Number</label>
@@ -258,38 +311,41 @@ input,select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;mar
       <label>Province</label>
       <select id="sigProvince">
         <option value="">Select Province</option>
-        <option>Limpopo</option>
         <option>Gauteng</option>
+        <option>Western Cape</option>
         <option>KwaZulu-Natal</option>
         <option>Eastern Cape</option>
-        <option>Western Cape</option>
+        <option>Limpopo</option>
+        <option>Mpumalanga</option>
+        <option>North West</option>
         <option>Northern Cape</option>
         <option>Free State</option>
-        <option>North West</option>
-        <option>Mpumalanga</option>
       </select>
       <button class="btn" onclick="signPetition()">Sign the Petition</button>
-      <small>I confirm I am a South African citizen and support this demand.</small>
+      <p style="font-size:0.8rem;margin-top:8px">
+        <input type="checkbox" id="confirm" style="width:auto">
+        <label for="confirm">I confirm I am a South African citizen and support this demand.</label>
+      </p>
+      <p style="font-size:0.8rem;color:#666">Signatures are private. Only the total is shown.</p>
     </div>
 
     <div id="thankYou" class="hidden">
       <div class="status approved">✓ Thank you for signing! Share this with your community.</div>
     </div>
+  </div>
 
-    <div class="signature-list" id="sigList">
-      <small>Signatures are private. Only the total is shown.</small>
-    </div>
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> MadibaBuild is an independent citizen platform.
+    Not affiliated with National Treasury, COGTA, SALGA, or any government department.
+    All project data is sourced from public records. This petition is a community input tool
+    and does not bind any government procurement process.
   </div>
 </div>
 
 </div>
 
 <footer>
-  <div class="disclaimer">
-    <strong>Disclaimer:</strong> VulaBuild is an independent citizen platform. Not affiliated with National Treasury, COGTA, SALGA, or any government department.
-    All project data is sourced from public records. This petition is a community input tool and does not bind any government procurement process.
-  </div>
-  <p>© 2026 VulaBuild. Built for transparency.</p>
+  © 2026 MadibaBuild. Built for transparency.
 </footer>
 
 <script>
@@ -368,11 +424,14 @@ async function loadSignatureCount() {
   try {
     const response = await fetch(`${APPS_SCRIPT_URL}?action=count`);
     const data = await response.json();
-    signatureCount = data.count || 0;
+    signatureCount = data.uniqueCount || data.count || 0;
     document.getElementById('sigCount').textContent = signatureCount.toLocaleString();
+    const percent = Math.min(100, (signatureCount / TARGET_SIGNATURES) * 100);
+    document.getElementById('progressFill').style.width = percent + '%';
   } catch (err) {
     console.error('Failed to load count', err);
     document.getElementById('sigCount').textContent = '0';
+    document.getElementById('progressFill').style.width = '0%';
   }
 }
 
@@ -380,14 +439,21 @@ async function signPetition(){
   const name = document.getElementById('sigName').value.trim();
   const id = document.getElementById('sigID').value.trim();
   const province = document.getElementById('sigProvince').value;
+  const confirmed = document.getElementById('confirm').checked;
+
   if(!name ||!id ||!province){
     alert('Please fill all fields');
+    return;
+  }
+  if(!confirmed){
+    alert('Please confirm you are a South African citizen');
     return;
   }
   if(id.length < 13){
     alert('Please enter a valid 13-digit ID number');
     return;
   }
+
   try {
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -395,14 +461,12 @@ async function signPetition(){
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({name: name, id: id, province: province})
     });
-    if (!response.ok) throw new Error('Network response was not ok');
     const result = await response.json();
     if (result.status === "duplicate") {
       alert("This ID number has already signed the petition.");
       return;
     }
     if (result.status === "success") {
-      alert("Thank you! Your signature has been recorded.");
       document.getElementById('signForm').classList.add('hidden');
       document.getElementById('thankYou').classList.remove('hidden');
       setTimeout(loadSignatureCount, 2000);
@@ -426,7 +490,7 @@ function renderProjectList(){
       <div class="project-card" onclick="selectProject(${p.id})">
         <h4>${p.name} <span class="badge ${statusClass}">${data.status.toUpperCase()}</span></h4>
         <small>${p.location} | Budget: R${p.budget.toLocaleString()}</small>
-        <div class="progress" style="margin-top:8px">
+        <div class="progress-bar" style="margin-top:8px">
           <div class="progress-bar" style="width:${percent}%"></div>
         </div>
         <small>${percent}% Complete | Jobs: ${data.jobs}</small>
@@ -461,7 +525,7 @@ function renderProjectPhases(){
     const status = phaseState.completed? 'done' : (currentPhase === p.id? 'active' : '');
     const badge = phaseState.completed? '<span class="badge done">Done</span>' : (currentPhase === p.id? '<span class="badge">Active</span>' : '');
     div.innerHTML += `
-      <div class="phase-select ${status}" onclick="selectPhase(${p.id})">
+      <div class="project-card ${status}" onclick="selectPhase(${p.id})">
         <div>
           <strong>${p.name}</strong><br>
           <small>${p.item} - Budget: R${Math.round(saProjects.find(pr=>pr.id===selectedProjectId).budget*p.budget).toLocaleString()}</small>
@@ -572,7 +636,6 @@ function updateNationalDashboard(){
     if(projectData[p.id].status === 'active') activeProjects++;
   });
   document.getElementById('totalProjects').innerText = activeProjects;
-  document.getElementById('totalBudget').innerText = `R2.83T`;
   document.getElementById('totalSpent').innerText = `R${Math.round(totalSpent).toLocaleString()}`;
   document.getElementById('totalJobs').innerText = totalJobs;
   document.getElementById('activityLog').innerHTML = activityLog.slice(0,10).map(a => `<p>${a}</p>`).join('') || '<p>No activity yet</p>';
