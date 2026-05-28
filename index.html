@@ -6,18 +6,17 @@
 <title>MadibaBuild Petition</title>
 <style>
 :root{
-  --green:#007A4D; /* SA Flag Green */
-  --black:#000; /* SA Flag Black */
-  --gold:#FFB81C; /* SA Flag Gold */
-  --blue:#001489; /* SA Flag Blue */
-  --red:#DE3831; /* SA Flag Red */
+  --green:#007A4D;
+  --black:#000;
+  --gold:#FFB81C;
+  --blue:#001489;
+  --red:#DE3831;
   --bg:#f5f7fa;
   --card:#fff;
   --text:#222;
 }
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{margin:0;background:var(--bg);color:var(--text)}
-
 header{
   background:linear-gradient(90deg, var(--black) 0%, var(--green) 50%, var(--blue) 100%);
   color:#fff;
@@ -26,11 +25,9 @@ header{
 }
 header h2{margin:0;font-size:1.4rem}
 header small{opacity:0.9}
-
 nav{display:flex;gap:8px;padding:10px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.05);overflow-x:auto}
 nav button{flex:1;padding:10px;border:none;border-radius:8px;background:#eee;cursor:pointer;white-space:nowrap}
 nav button.active{background:var(--green);color:#fff}
-
 .container{padding:16px;max-width:800px;margin:auto}
 .card{
   background:var(--card);
@@ -40,7 +37,6 @@ nav button.active{background:var(--green);color:#fff}
   box-shadow:0 3px 10px rgba(0,0,0,0.1);
   border-top:4px solid var(--gold)
 }
-
 h3{color:var(--green);margin-top:0}
 .btn{
   width:100%;
@@ -55,7 +51,6 @@ h3{color:var(--green);margin-top:0}
 }
 .btn:hover{background:#00663f}
 .btn:disabled{background:#ccc}
-
 input,select{
   width:100%;
   padding:12px;
@@ -64,7 +59,6 @@ input,select{
   border-radius:8px;
   font-size:1rem
 }
-
 .progress{
   text-align:center;
   margin:16px 0
@@ -88,7 +82,6 @@ input,select{
   width:0%;
   transition:width 1s ease-out
 }
-
 .disclaimer{
   font-size:0.85rem;
   color:#555;
@@ -102,7 +95,6 @@ footer{
   font-size:0.85rem;
   color:#666
 }
-
 .project-card{border:2px solid #ddd;border-radius:10px;padding:14px;margin:10px 0;cursor:pointer;transition:all 0.3s}
 .project-card:hover{border-color:var(--green);transform:translateY(-2px)}
 .project-card h4{margin:0 0 6px 0;display:flex;align-items:center;gap:8px}
@@ -126,7 +118,6 @@ small{color:#666}
 .counter{font-size:32px;font-weight:bold;color:var(--green);text-align:center}
 .target{color:#666;text-align:center;margin-bottom:16px}
 .last-updated{font-size:11px;color:#888;text-align:right;margin-top:8px}
-
 .budget-card{
   background:#1f1f1f;
   color:#e9e9e9;
@@ -157,7 +148,6 @@ small{color:#666}
 
 <div class="container">
 
-<!-- 1. LEADER APP TAB -->
 <div id="leader" class="tab">
   <div class="card">
     <h3>Select Project & Phase</h3>
@@ -184,7 +174,6 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 2. ALL PROJECTS TAB -->
 <div id="projects" class="tab hidden">
   <div class="budget-card">
     <h3>SA 2027 Projects & Budget Breakdown</h3>
@@ -215,7 +204,6 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 3. DASHBOARD TAB -->
 <div id="dashboard" class="tab hidden">
   <div class="grid">
     <div class="stat-card">
@@ -260,7 +248,6 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 4. UPLOAD & GET PAID TAB -->
 <div id="upload" class="tab hidden">
   <div class="card">
     <h3>Submit Work for Payment</h3>
@@ -280,7 +267,6 @@ small{color:#666}
   </div>
 </div>
 
-<!-- 5. PETITION TAB -->
 <div id="petition" class="tab hidden">
   <div class="card">
     <p><strong>Transparency kills corruption.</strong> And when corruption dies, jobs, services, and dignity are born.</p>
@@ -422,9 +408,9 @@ function updateRealTimeData(){
 
 async function loadSignatureCount() {
   try {
-    const response = await fetch(`${APPS_SCRIPT_URL}?action=count`);
+    const response = await fetch(`${APPS_SCRIPT_URL}`);
     const data = await response.json();
-    signatureCount = data.uniqueCount || data.count || 0;
+    signatureCount = data.count || 0;
     document.getElementById('sigCount').textContent = signatureCount.toLocaleString();
     const percent = Math.min(100, (signatureCount / TARGET_SIGNATURES) * 100);
     document.getElementById('progressFill').style.width = percent + '%';
@@ -457,22 +443,16 @@ async function signPetition(){
   try {
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      mode: 'cors',
+      mode: 'no-cors',
       headers: {'Content-Type': 'text/plain;charset=utf-8'},
       body: JSON.stringify({name: name, id: id, province: province})
     });
-    const result = await response.json();
-    if (result.status === "duplicate") {
-      alert("This ID number has already signed the petition.");
-      return;
-    }
-    if (result.status === "success") {
-      document.getElementById('signForm').classList.add('hidden');
-      document.getElementById('thankYou').classList.remove('hidden');
-      setTimeout(loadSignatureCount, 2000);
-    } else {
-      throw new Error(result.message || 'Unknown error');
-    }
+
+    // With mode: 'no-cors' we can't read the response, so assume success and refresh count
+    document.getElementById('signForm').classList.add('hidden');
+    document.getElementById('thankYou').classList.remove('hidden');
+    setTimeout(loadSignatureCount, 2000);
+
   } catch (err) {
     console.error(err);
     alert('Submission failed. Please try again.');
